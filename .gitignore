@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Expo & Web Builds
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Windows Desktop Electron Builds
+release-windows/
+*.blockmap
+
+# Binaries & Installers
+*.apk
+*.aab
+*.exe
+*.msi
+*.dll
+
+# Native Android Build Artifacts & Caches
+android/.gradle/
+android/build/
+android/app/build/
+android/.cxx/
+android/app/.cxx/
+android/local.properties
+android/*.keystore
+android/app/*.keystore
+!android/app/debug.keystore
+
+# Kotlin & Metro
+.kotlin/
+.metro-health-check*
+*.orig.*
+
+# Logs
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Environment & Secrets
+.env
+.env*.local
+
+# System & IDE
+.DS_Store
+*.pem
+.vscode/
+*.tsbuildinfo

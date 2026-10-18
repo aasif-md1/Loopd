@@ -1,0 +1,98 @@
+{
+  "name": "loopd",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "dependencies": {
+    "@expo-google-fonts/figtree": "^0.4.1",
+    "@react-native-async-storage/async-storage": "^3.1.1",
+    "@shopify/flash-list": "^2.3.3",
+    "@tanstack/react-query": "^5.104.3",
+    "@types/crypto-js": "^4.2.2",
+    "axios": "^1.20.0",
+    "caniuse-lite": "^1.0.30001816",
+    "crypto-js": "^4.2.0",
+    "expo": "~58.0.12",
+    "expo-audio": "~58.0.9",
+    "expo-blur": "^58.0.3",
+    "expo-constants": "~58.0.12",
+    "expo-font": "~58.0.8",
+    "expo-haptics": "^58.0.6",
+    "expo-image": "^58.0.15",
+    "expo-linear-gradient": "^58.0.3",
+    "expo-linking": "~58.0.13",
+    "expo-router": "~58.0.21",
+    "expo-splash-screen": "~58.0.9",
+    "expo-status-bar": "~58.0.3",
+    "expo-symbols": "~58.0.4",
+    "expo-web-browser": "~58.0.6",
+    "lucide-react-native": "^1.58.0",
+    "phosphor-react-native": "^3.0.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-gesture-handler": "^3.3.0",
+    "react-native-reanimated": "4.7.1",
+    "react-native-safe-area-context": "~5.10.1",
+    "react-native-screens": "^4.30.0",
+    "react-native-svg": "^15.16.0",
+    "react-native-web": "~0.21.4",
+    "react-native-worklets": "0.13.0",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@types/react": "~19.3.0",
+    "concurrently": "^10.0.6",
+    "electron": "^44.9.0",
+    "electron-builder": "^26.15.3",
+    "typescript": "~6.0.3",
+    "wait-on": "^9.5.1"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "test": "node scripts/unit_tests.js && node scripts/test_banned_icons.js",
+    "typecheck": "tsc --noEmit",
+    "desktop": "electron .",
+    "dist:win": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.loopd.music",
+    "productName": "Loopd Music",
+    "npmRebuild": false,
+    "nodeGypRebuild": false,
+    "extraMetadata": {
+      "main": "electron-main.js",
+      "dependencies": {}
+    },
+    "directories": {
+      "output": "release-windows"
+    },
+    "files": [
+      "package.json",
+      "index.js",
+      "electron-main.js",
+      "dist/**/*",
+      "assets/**/*",
+      "!node_modules"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "dir"
+      ],
+      "icon": "assets/images/loopd-icon.ico",
+      "executableName": "Loopd"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Loopd Music"
+    }
+  },
+  "private": true
+}
