@@ -141,7 +141,7 @@ def map_track(item: Dict[str, Any], base_url: str = "") -> Optional[Dict[str, An
 
 
 def extract_audio_url(video_id: str) -> str:
-    """Extract high-quality direct audio CDN stream URL using yt-dlp with caching."""
+    """Extract high-quality direct audio CDN stream URL with multi-tier fallback and caching."""
     now = time.time()
     cached = STREAM_CACHE.get(video_id)
     if cached:
@@ -149,35 +149,92 @@ def extract_audio_url(video_id: str) -> str:
         if exp > now:
             return url
 
-    video_url = f"https://www.youtube.com/watch?v={video_id}"
+    # Tier 1: Try ytmusic.get_song(video_id) direct streamingData (fastest, uses YouTube Music client)
     try:
-        with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
-            info = ydl.extract_info(video_url, download=False)
-            if not info:
-                raise HTTPException(status_code=404, detail="Track audio not found")
-
-            stream_url = info.get("url")
-            if not stream_url and "formats" in info:
-                # Find best audio-only format
-                audio_formats = [
-                    f for f in info["formats"]
-                    if f.get("acodec") != "none" and (f.get("vcodec") == "none" or f.get("format_note") == "tiny")
-                ]
-                if audio_formats:
-                    # Pick highest bitrate
-                    audio_formats.sort(key=lambda x: x.get("abr") or x.get("tbr") or 0, reverse=True)
-                    stream_url = audio_formats[0].get("url")
-
-            if not stream_url:
-                raise HTTPException(status_code=404, detail="Direct audio stream not available")
-
-            # Cache the extracted URL for 2 hours
-            STREAM_CACHE[video_id] = (stream_url, now + CACHE_TTL)
-            return stream_url
-    except HTTPException:
-        raise
+        song_data = ytmusic.get_song(video_id)
+        streaming_data = song_data.get("streamingData", {}) if isinstance(song_data, dict) else {}
+        formats = streaming_data.get("adaptiveFormats", []) + streaming_data.get("formats", [])
+        audio_formats = [f for f in formats if "audio" in f.get("mimeType", "") and f.get("url")]
+        if audio_formats:
+            audio_formats.sort(key=lambda x: x.get("bitrate", 0), reverse=True)
+            stream_url = audio_formats[0].get("url")
+            if stream_url:
+                STREAM_CACHE[video_id] = (stream_url, now + CACHE_TTL)
+                return stream_url
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to extract stream: {str(e)}")
+        print(f"[YTMusic Tier 1 get_song error] {e}")
+
+    # Tier 2: Try yt-dlp with ios / android mobile clients (bypasses bot wall on datacenter IPs)
+    video_url = f"https://www.youtube.com/watch?v={video_id}"
+    mobile_opts = {
+        "format": "bestaudio/best",
+        "quiet": True,
+        "no_warnings": True,
+        "skip_download": True,
+        "extract_flat": False,
+        "socket_timeout": 12,
+        "nocheckcertificate": True,
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["ios", "android", "mweb"]
+            }
+        }
+    }
+
+    try:
+        with yt_dlp.YoutubeDL(mobile_opts) as ydl:
+            info = ydl.extract_info(video_url, download=False)
+            if info:
+                stream_url = info.get("url")
+                if not stream_url and "formats" in info:
+                    audio_formats = [
+                        f for f in info["formats"]
+                        if f.get("acodec") != "none" and (f.get("vcodec") == "none" or f.get("format_note") == "tiny")
+                    ]
+                    if audio_formats:
+                        audio_formats.sort(key=lambda x: x.get("abr") or x.get("tbr") or 0, reverse=True)
+                        stream_url = audio_formats[0].get("url")
+                if stream_url:
+                    STREAM_CACHE[video_id] = (stream_url, now + CACHE_TTL)
+                    return stream_url
+    except Exception as e:
+        print(f"[YTMusic Tier 2 yt-dlp mobile error] {e}")
+
+    # Tier 3: Try yt-dlp with tvhtml5 client
+    tv_opts = {
+        "format": "bestaudio/best",
+        "quiet": True,
+        "no_warnings": True,
+        "skip_download": True,
+        "extract_flat": False,
+        "socket_timeout": 12,
+        "nocheckcertificate": True,
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["tvhtml5", "tv"]
+            }
+        }
+    }
+    try:
+        with yt_dlp.YoutubeDL(tv_opts) as ydl:
+            info = ydl.extract_info(video_url, download=False)
+            if info:
+                stream_url = info.get("url")
+                if not stream_url and "formats" in info:
+                    audio_formats = [
+                        f for f in info["formats"]
+                        if f.get("acodec") != "none"
+                    ]
+                    if audio_formats:
+                        audio_formats.sort(key=lambda x: x.get("abr") or x.get("tbr") or 0, reverse=True)
+                        stream_url = audio_formats[0].get("url")
+                if stream_url:
+                    STREAM_CACHE[video_id] = (stream_url, now + CACHE_TTL)
+                    return stream_url
+    except Exception as e:
+        print(f"[YTMusic Tier 3 yt-dlp tv error] {e}")
+
+    raise HTTPException(status_code=500, detail="Could not extract audio stream from any client")
 
 
 @app.get("/")
