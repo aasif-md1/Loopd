@@ -2,6 +2,7 @@ package com.opentune.ui.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,7 +28,6 @@ import com.opentune.ui.settings.AppIcon
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.sin
-import kotlinx.coroutines.delay
 
 /** Plays once per launch of the app, not each time the screen is rebuilt. */
 object Opening {
@@ -60,10 +60,9 @@ fun OpeningReveal(onDive: (Float) -> Unit, onDone: () -> Unit) {
 
     LaunchedEffect(Unit) {
         // Phase 1: Logo settles with a smooth organic breath
-        settle.animateTo(1f, tween(SETTLE_MS, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)))
-        delay(HOLD_MS)
-        // Phase 2: Exponential dive into the true logo aperture
-        dive.animateTo(1f, tween(DIVE_MS, easing = CubicBezierEasing(0.6f, 0f, 0.85f, 0.35f))) {
+        settle.animateTo(1f, tween(SETTLE_MS, easing = FastOutSlowInEasing))
+        // Phase 2: Smooth, continuous dive without awkward pause or GPU hitch
+        dive.animateTo(1f, tween(DIVE_MS, easing = CubicBezierEasing(0.4f, 0f, 0.2f, 1f))) {
             report(value)
         }
         report(1f)
@@ -79,20 +78,21 @@ fun OpeningReveal(onDive: (Float) -> Unit, onDone: () -> Unit) {
         val d = dive.value
         val st = settle.value
 
+        val fade = (1f - smooth(0.65f, 0.96f, d)).coerceIn(0f, 1f)
+        if (fade <= 0.005f) return@Canvas
+
         val fieldColor = if (activeIcon.isDark) Color.Black else Color.White
         val markColor = if (activeIcon.isDark) Color.White else Color.Black
 
         // Android 12+ splash displays the 108dp icon at 240dp across.
-        // Starting at exactly 240dp guarantees 100% gapless continuity.
         val basePx = 240.dp.toPx()
-        val breathe = 1f + 0.045f * sin(Math.PI.toFloat() * st)
+        val breathe = 1f + 0.04f * sin(Math.PI.toFloat() * st)
         val currentScale = breathe * exp(ln(ZOOM) * d * d)
         val sizePx = basePx * currentScale
         val left = center.x - sizePx / 2f
         val top = center.y - sizePx / 2f
 
         val window = smooth(0.04f, 0.28f, d)
-        val fade = 1f - smooth(0.8f, 1f, d)
 
         // 1. Background field
         drawRect(fieldColor, alpha = fade)
@@ -131,7 +131,6 @@ private fun smooth(from: Float, to: Float, x: Float): Float {
     return t * t * (3f - 2f * t)
 }
 
-private const val SETTLE_MS = 620
-private const val HOLD_MS = 120L
-private const val DIVE_MS = 900
-private const val ZOOM = 90f
+private const val SETTLE_MS = 500
+private const val DIVE_MS = 600
+private const val ZOOM = 12f
