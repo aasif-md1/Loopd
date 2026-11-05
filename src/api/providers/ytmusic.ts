@@ -28,8 +28,9 @@ function getBaseUrl(): string {
 
 function normalizeTrack(raw: any): Track {
   const videoId = (raw.id || '').replace(/^ytmusic-/, '');
-  const base = getBaseUrl();
-  const directStreamUrl = `${base}/stream/${videoId}`;
+  // Keep empty or real CDN URL so playerService triggers getStreamUrl() dynamically
+  const isDirectCdn = raw.streamUrl && !raw.streamUrl.startsWith('/stream/') && !raw.streamUrl.includes('/stream/');
+  const directStreamUrl = isDirectCdn ? raw.streamUrl : '';
 
   return {
     id: raw.id?.startsWith('ytmusic-') ? raw.id : `ytmusic-${videoId}`,
@@ -114,6 +115,46 @@ export const YTMusicProvider: MusicProvider & {
   async getStreamUrl(trackId: string): Promise<string | null> {
     const cleanId = trackId.replace(/^ytmusic-/, '');
     const base = getBaseUrl();
+
+    // 1. Fetch direct CDN stream URL from Render backend (/stream-url/{id})
+    try {
+      const res = await client.get(`${base}/stream-url/${cleanId}`, { timeout: 4500 });
+      if (res.data?.streamUrl) {
+        return res.data.streamUrl;
+      }
+    } catch (e) {
+      console.warn('[YTMusic] Backend stream-url failed or slow, falling back to direct client race', e);
+    }
+
+    // 2. Client-side fallback race against fast public Piped instances
+    const PIPED_FALLBACKS = [
+      `https://pipedapi.kavin.rocks/streams/${cleanId}`,
+      `https://pipedapi.leptons.xyz/streams/${cleanId}`,
+      `https://api.piped.yt/streams/${cleanId}`,
+      `https://pipedapi.adminforge.de/streams/${cleanId}`,
+    ];
+
+    try {
+      const racePromises = PIPED_FALLBACKS.map(async (url) => {
+        const res = await axios.get(url, { timeout: 3500 });
+        const streams = res.data?.audioStreams || [];
+        if (streams.length > 0) {
+          const m4a = streams.filter(
+            (s: any) =>
+              String(s.format || '').toUpperCase() === 'M4A' ||
+              String(s.mimeType || '').toLowerCase().includes('audio/mp4')
+          );
+          const best = m4a.length > 0 ? m4a[0] : streams[0];
+          if (best?.url) return best.url as string;
+        }
+        throw new Error('No stream');
+      });
+
+      const winner = await Promise.any(racePromises);
+      if (winner) return winner;
+    } catch (_) {}
+
+    // 3. Last resort fallback
     return `${base}/stream/${cleanId}`;
   },
 
