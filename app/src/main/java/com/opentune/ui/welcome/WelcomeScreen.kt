@@ -174,18 +174,13 @@ fun WelcomeScreen(
     // The suggestions start from the charts where the listener is, so approximate location is
     // asked for first; whatever the answer, the artists load after it (from the network's country
     // when it's declined). A device without location (a TV) isn't asked.
-    var locationAnswered by rememberSaveable {
-        mutableStateOf(
-            com.opentune.data.radio.ApproxLocation.granted(context) ||
-                !context.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_LOCATION),
-        )
-    }
+    var locationAnswered by rememberSaveable { mutableStateOf(true) }
     val askLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { locationAnswered = true }
     var asked by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         if (!locationAnswered && !asked) {
             asked = true
-            runCatching { askLocation.launch(android.Manifest.permission.ACCESS_COARSE_LOCATION) }.onFailure { locationAnswered = true }
+            locationAnswered = true
         }
     }
     var country by rememberSaveable { mutableStateOf<String?>(null) }

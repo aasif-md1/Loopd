@@ -11,8 +11,6 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Scanning a TV's sign-in code in the app; only asked for when that's used. -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <!-- Approximate only: used once to find radio stations nearby, never kept. -->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <!-- Downloads run as a WorkManager foreground job. -->
