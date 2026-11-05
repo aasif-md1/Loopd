@@ -37,22 +37,18 @@ import com.opentune.ui.components.FloatingDialog
 import com.opentune.ui.components.SheetButton
 
 internal enum class AppIcon(val title: String, val resource: Int) {
-    // The names are the launcher aliases in the manifest: kept as they are so a choice made
-    // before carries over, whatever each is called on screen now.
-    Classic("Classic", R.mipmap.ic_launcher),
-    Midnight("Midnight", R.mipmap.ic_launcher_midnight),
-    Pearl("Pearl", R.mipmap.ic_launcher_pearl),
-    Rose("Sunset", R.mipmap.ic_launcher_rose),
-    Ocean("Ocean", R.mipmap.ic_launcher_ocean),
-    Aurora("Aurora", R.mipmap.ic_launcher_aurora),
-    Gold("Gold", R.mipmap.ic_launcher_gold),
-    Neon("Neon", R.mipmap.ic_launcher_neon);
+    LooPd("LooPd", R.mipmap.ic_launcher),
+    PULSE("PULSE", R.mipmap.ic_launcher_pulse),
+    FLOW("FLOW", R.mipmap.ic_launcher_flow),
+    AXIS("AXIS", R.mipmap.ic_launcher_axis),
+    TUNE("TUNE", R.mipmap.ic_launcher_tune),
+    ORBIT("ORBIT", R.mipmap.ic_launcher_orbit);
 
     fun component(context: Context) = ComponentName(context, "${context.packageName}.icon.$name")
     companion object {
         fun selected(context: Context): AppIcon = entries.firstOrNull {
             context.packageManager.getComponentEnabledSetting(it.component(context)) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-        } ?: Classic
+        } ?: LooPd
     }
 }
 

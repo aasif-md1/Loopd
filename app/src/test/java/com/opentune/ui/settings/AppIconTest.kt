@@ -17,7 +17,7 @@ class AppIconTest {
     @Test fun changingIconsKeepsOneLauncherAndTheRealActivityEnabled() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val pm = context.packageManager
-        for (icon in AppIcon.entries + AppIcon.Classic) {
+        for (icon in AppIcon.entries + AppIcon.LooPd) {
             selectAppIcon(context, icon)
             assertEquals(icon, AppIcon.selected(context))
             val launchers = pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setPackage(context.packageName), 0)

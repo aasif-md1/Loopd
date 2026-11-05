@@ -143,71 +143,54 @@
         </activity>
 
         <!-- MainActivity stays enabled for links, notifications and TV; only launcher aliases change. -->
-        <activity-alias android:name=".icon.Classic" android:targetActivity=".MainActivity"
+        <activity-alias android:name="${applicationId}.icon.LooPd" android:targetActivity=".MainActivity"
             android:enabled="true" android:exported="true"
-            android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:label="@string/app_name">
+            android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-        <activity-alias android:name=".icon.Midnight" android:targetActivity=".MainActivity"
+        <activity-alias android:name="${applicationId}.icon.PULSE" android:targetActivity=".MainActivity"
             android:enabled="false" android:exported="true"
-            android:icon="@mipmap/ic_launcher_midnight" android:roundIcon="@mipmap/ic_launcher_midnight" android:label="@string/app_name">
+            android:icon="@mipmap/ic_launcher_pulse" android:roundIcon="@mipmap/ic_launcher_pulse" android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-        <activity-alias android:name=".icon.Pearl" android:targetActivity=".MainActivity"
+        <activity-alias android:name="${applicationId}.icon.FLOW" android:targetActivity=".MainActivity"
             android:enabled="false" android:exported="true"
-            android:icon="@mipmap/ic_launcher_pearl" android:roundIcon="@mipmap/ic_launcher_pearl" android:label="@string/app_name">
+            android:icon="@mipmap/ic_launcher_flow" android:roundIcon="@mipmap/ic_launcher_flow" android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-        <activity-alias android:name=".icon.Rose" android:targetActivity=".MainActivity"
+        <activity-alias android:name="${applicationId}.icon.AXIS" android:targetActivity=".MainActivity"
             android:enabled="false" android:exported="true"
-            android:icon="@mipmap/ic_launcher_rose" android:roundIcon="@mipmap/ic_launcher_rose" android:label="@string/app_name">
+            android:icon="@mipmap/ic_launcher_axis" android:roundIcon="@mipmap/ic_launcher_axis" android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-        <activity-alias android:name=".icon.Ocean" android:targetActivity=".MainActivity"
+        <activity-alias android:name="${applicationId}.icon.TUNE" android:targetActivity=".MainActivity"
             android:enabled="false" android:exported="true"
-            android:icon="@mipmap/ic_launcher_ocean" android:roundIcon="@mipmap/ic_launcher_ocean" android:label="@string/app_name">
+            android:icon="@mipmap/ic_launcher_tune" android:roundIcon="@mipmap/ic_launcher_tune" android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-        <activity-alias android:name=".icon.Aurora" android:targetActivity=".MainActivity"
+        <activity-alias android:name="${applicationId}.icon.ORBIT" android:targetActivity=".MainActivity"
             android:enabled="false" android:exported="true"
-            android:icon="@mipmap/ic_launcher_aurora" android:roundIcon="@mipmap/ic_launcher_aurora" android:label="@string/app_name">
+            android:icon="@mipmap/ic_launcher_orbit" android:roundIcon="@mipmap/ic_launcher_orbit" android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-        <activity-alias android:name=".icon.Gold" android:targetActivity=".MainActivity"
-            android:enabled="false" android:exported="true"
-            android:icon="@mipmap/ic_launcher_gold" android:roundIcon="@mipmap/ic_launcher_gold" android:label="@string/app_name">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-        <activity-alias android:name=".icon.Neon" android:targetActivity=".MainActivity"
-            android:enabled="false" android:exported="true"
-            android:icon="@mipmap/ic_launcher_neon" android:roundIcon="@mipmap/ic_launcher_neon" android:label="@string/app_name">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
 
         <service
             android:name=".playback.PlaybackService"
