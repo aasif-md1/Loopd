@@ -36,19 +36,30 @@ import com.opentune.R
 import com.opentune.ui.components.FloatingDialog
 import com.opentune.ui.components.SheetButton
 
-internal enum class AppIcon(val title: String, val resource: Int) {
-    LooPd("LooPd", R.mipmap.ic_launcher),
-    PULSE("PULSE", R.mipmap.ic_launcher_pulse),
-    FLOW("FLOW", R.mipmap.ic_launcher_flow),
-    AXIS("AXIS", R.mipmap.ic_launcher_axis),
-    TUNE("TUNE", R.mipmap.ic_launcher_tune),
-    ORBIT("ORBIT", R.mipmap.ic_launcher_orbit);
+internal enum class AppIcon(
+    val title: String,
+    val resource: Int,
+    val foregroundRes: Int,
+    val isDark: Boolean,
+) {
+    LooPd("LooPd", R.mipmap.ic_launcher, R.drawable.ic_foreground_loopd, isDark = true),
+    PULSE("PULSE", R.mipmap.ic_launcher_pulse, R.drawable.ic_foreground_pulse, isDark = false),
+    FLOW("FLOW", R.mipmap.ic_launcher_flow, R.drawable.ic_foreground_flow, isDark = false),
+    AXIS("AXIS", R.mipmap.ic_launcher_axis, R.drawable.ic_foreground_axis, isDark = true),
+    TUNE("TUNE", R.mipmap.ic_launcher_tune, R.drawable.ic_foreground_tune, isDark = false),
+    ORBIT("ORBIT", R.mipmap.ic_launcher_orbit, R.drawable.ic_foreground_orbit, isDark = true);
 
     fun component(context: Context) = ComponentName(context, "${context.packageName}.icon.$name")
     companion object {
-        fun selected(context: Context): AppIcon = entries.firstOrNull {
-            context.packageManager.getComponentEnabledSetting(it.component(context)) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-        } ?: LooPd
+        var current: AppIcon = LooPd
+
+        fun selected(context: Context): AppIcon {
+            val found = entries.firstOrNull {
+                context.packageManager.getComponentEnabledSetting(it.component(context)) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            } ?: LooPd
+            current = found
+            return found
+        }
     }
 }
 
@@ -59,6 +70,7 @@ internal fun selectAppIcon(context: Context, choice: AppIcon) {
     AppIcon.entries.filter { it != choice }.forEach {
         pm.setComponentEnabledSetting(it.component(context), PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
     }
+    AppIcon.current = choice
 }
 
 @Composable

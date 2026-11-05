@@ -341,10 +341,10 @@ object ShareCard {
 
     private const val BRAND = "Loopd"
     // Where the mark sits in the icon's 108-unit square.
-    private const val MARK_LEFT = 27.8f
-    private const val MARK_RIGHT = 80.3f
-    private const val MARK_TOP = 34.9f
-    private const val MARK_BOTTOM = 73.1f
+    private const val MARK_LEFT = 24.5f
+    private const val MARK_RIGHT = 83.5f
+    private const val MARK_TOP = 24.5f
+    private const val MARK_BOTTOM = 83.5f
     private const val MARK_ASPECT = (MARK_RIGHT - MARK_LEFT) / (MARK_BOTTOM - MARK_TOP)
 
     /**

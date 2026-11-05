@@ -112,7 +112,8 @@ private val PULL_ROOM = 72.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MarkIndicator(state: PullToRefreshState, refreshing: Boolean, still: Boolean, modifier: Modifier) {
-    val mark = remember { markPath() }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val mark = remember(context) { markPath(context) }
     // The colours of the song that's playing, so the mark matches the player.
     val (ink, inkEnd) = songAccents()
     val faint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.22f)
@@ -176,8 +177,4 @@ private fun MarkIndicator(state: PullToRefreshState, refreshing: Boolean, still:
     }
 }
 
-// Where the mark sits in the icon's 108-unit square.
-private const val MARK_LEFT = 27.8f
-private const val MARK_RIGHT = 80.3f
-private const val MARK_TOP = 34.9f
-private const val MARK_BOTTOM = 73.1f
+

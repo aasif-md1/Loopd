@@ -304,7 +304,8 @@ private fun FoundCard(song: Recognized, finding: Boolean, onPlay: () -> Unit, on
  */
 @Composable
 private fun ListenOrb(listening: Boolean, level: () -> Float, modifier: Modifier, onClick: () -> Unit) {
-    val mark = remember { markPath() }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val mark = remember(context) { markPath(context) }
     val (a, b) = songAccents()
     val clock = rememberInfiniteTransition(label = "orb")
     val t by clock.animateFloat(0f, 1f, infiniteRepeatable(tween(12_000, easing = LinearEasing), RepeatMode.Restart), label = "turn")
