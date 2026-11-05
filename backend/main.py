@@ -175,8 +175,13 @@ def extract_audio_url(video_id: str) -> str:
                     ]
                     candidates = m4a_formats if m4a_formats else audio_formats
                     candidates.sort(key=lambda x: int(x.get("bitrate", 0)), reverse=True)
-                    stream_url = candidates[0].get("url")
-                    if stream_url:
+                    raw_url = candidates[0].get("url")
+                    if raw_url:
+                        # Route through Invidious server proxy so IP matches and YouTube CDN returns 200/206
+                        from urllib.parse import urlparse, urlunparse
+                        parsed = urlparse(raw_url)
+                        inst_parsed = urlparse(inst)
+                        stream_url = urlunparse((inst_parsed.scheme, inst_parsed.netloc, parsed.path, parsed.params, parsed.query, parsed.fragment))
                         STREAM_CACHE[video_id] = (stream_url, now + CACHE_TTL)
                         return stream_url
         except Exception as e:
