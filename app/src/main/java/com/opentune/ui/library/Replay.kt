@@ -80,6 +80,9 @@ import com.opentune.data.history.TopEntry
 import com.opentune.data.model.CARD_ART_PX
 import com.opentune.data.model.artworkAt
 import com.opentune.ui.components.Artwork
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.ColorFilter
+import com.opentune.ui.settings.AppIcon
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.launch
@@ -182,6 +185,8 @@ internal fun ReplayCards(
 
 @Composable
 private fun ExperienceCard(face: CardFace, index: Int, name: String, since: String, onClick: () -> Unit, modifier: Modifier) {
+    val context = LocalContext.current
+    val activeIcon = remember { AppIcon.selected(context) }
     val (top, bottom) = CardColors[index.coerceIn(0, CardColors.lastIndex)]
     val shape = RoundedCornerShape(28.dp)
     val lift = Shadow(Color.Black.copy(alpha = 0.45f), blurRadius = 18f)
@@ -194,7 +199,7 @@ private fun ExperienceCard(face: CardFace, index: Int, name: String, since: Stri
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("YOUR LISTENING EXPERIENCE", Modifier.weight(1f), color = Color.White.copy(alpha = 0.85f),
                 fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.6.sp, maxLines = 1)
-            Icon(painterResource(com.opentune.R.drawable.ic_launcher_monochrome), null, Modifier.size(40.dp).offset(x = 8.dp), tint = Color.White)
+            Image(painterResource(activeIcon.foregroundRes), null, Modifier.size(36.dp).offset(x = 6.dp), colorFilter = ColorFilter.tint(Color.White))
         }
         Spacer(Modifier.weight(1f))
         Text(face.value, color = Color.White, style = TextStyle(fontSize = if (face.value.length > 14) 26.sp else 34.sp,
@@ -284,7 +289,8 @@ internal fun ReplayStory(summary: ReplaySummary, range: ReplayRange, onDismiss: 
                 Column(Modifier.fillMaxSize()) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Replay · ${range.heading()}", Modifier.weight(1f), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                        Icon(painterResource(com.opentune.R.drawable.ic_launcher_monochrome), null, Modifier.size(30.dp), tint = Color.White)
+                        val activeIcon = remember { AppIcon.selected(context) }
+                        Image(painterResource(activeIcon.foregroundRes), null, Modifier.size(24.dp).padding(end = 4.dp), colorFilter = ColorFilter.tint(Color.White))
                         Text("Loopd", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     }
                     Spacer(Modifier.height(14.dp))
