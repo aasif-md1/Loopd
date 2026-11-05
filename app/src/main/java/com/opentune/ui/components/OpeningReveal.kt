@@ -11,15 +11,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
@@ -44,8 +40,7 @@ val OPENING_FIELD = Color.Black
 /**
  * OpeningReveal takes over seamlessly from the Android system splash screen.
  * Uses the 100% authentic app icon foreground drawable with zero shape distortion,
- * breathes and shimmers across the true logo, then dives into the logo aperture
- * to reveal the app below.
+ * breathes smoothly, then dives through the logo aperture into the main app interface.
  */
 @Composable
 fun OpeningReveal(onDive: (Float) -> Unit, onDone: () -> Unit) {
@@ -64,10 +59,10 @@ fun OpeningReveal(onDive: (Float) -> Unit, onDone: () -> Unit) {
     val report by rememberUpdatedState(onDive)
 
     LaunchedEffect(Unit) {
-        // Phase 1: Settle with authentic breathing and specular glint
+        // Phase 1: Logo settles with a smooth organic breath
         settle.animateTo(1f, tween(SETTLE_MS, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)))
         delay(HOLD_MS)
-        // Phase 2: Exponential dive into the true logo window
+        // Phase 2: Exponential dive into the true logo aperture
         dive.animateTo(1f, tween(DIVE_MS, easing = CubicBezierEasing(0.6f, 0f, 0.85f, 0.35f))) {
             report(value)
         }
@@ -106,7 +101,7 @@ fun OpeningReveal(onDive: (Float) -> Unit, onDone: () -> Unit) {
             val dstOffset = IntOffset(left.toInt(), top.toInt())
             val dstSize = IntSize(sizePx.toInt(), sizePx.toInt())
 
-            // 2. Draw the 100% authentic logo
+            // 2. Draw the 100% authentic logo (crisp, zero artifacts, pure fidelity)
             if (window < 1f) {
                 drawImage(
                     image = imageBitmap,
@@ -117,49 +112,7 @@ fun OpeningReveal(onDive: (Float) -> Unit, onDone: () -> Unit) {
                 )
             }
 
-            // 3. Shimmer glint across the authentic logo during settle
-            if (st in 0.05f..0.98f && d == 0f) {
-                val glintX = left - sizePx * 0.2f + sizePx * 1.4f * st
-                val glintWidth = sizePx * 0.35f
-                drawRect(
-                    brush = Brush.linearGradient(
-                        listOf(
-                            Color.White.copy(alpha = 0f),
-                            Color.White.copy(alpha = 0.85f),
-                            Color.White.copy(alpha = 0f),
-                        ),
-                        start = Offset(glintX - glintWidth / 2f, top),
-                        end = Offset(glintX + glintWidth / 2f, top + sizePx),
-                    ),
-                    topLeft = Offset(left, top),
-                    size = Size(sizePx, sizePx),
-                    blendMode = BlendMode.SrcAtop,
-                )
-            }
-
-            // 4. LooPd-specific: Harmonic concentric acoustic ripples during settle
-            if (activeIcon == AppIcon.LooPd) {
-                if (d == 0f && st > 0.05f) {
-                    val cx = center.x
-                    val cy = center.y
-                    for (i in 0..2) {
-                        val progress = ((st * 1.5f + i * 0.33f) % 1f)
-                        val radius = (sizePx * 0.12f) + (sizePx * 0.38f) * progress
-                        val alpha = (1f - progress) * 0.5f * (1f - window)
-                        if (alpha > 0.02f) {
-                            drawCircle(
-                                color = markColor,
-                                radius = radius,
-                                center = Offset(cx, cy),
-                                style = Stroke(width = 1.8.dp.toPx()),
-                                alpha = alpha,
-                            )
-                        }
-                    }
-                }
-            }
-
-            // 5. Dive: punch an aperture through the black field in the EXACT shape of the real logo
+            // 3. Dive: punch an aperture through the field in the EXACT shape of the real logo
             if (window > 0f) {
                 drawImage(
                     image = imageBitmap,
@@ -168,21 +121,6 @@ fun OpeningReveal(onDive: (Float) -> Unit, onDone: () -> Unit) {
                     alpha = window,
                     blendMode = BlendMode.DstOut,
                 )
-            }
-
-            // 6. Glowing subtle rim aura framing the opening aperture during dive
-            if (fade > 0f && d > 0.02f) {
-                val rimOffset = (1.5.dp.toPx() * (1f - d)).toInt()
-                if (rimOffset > 0) {
-                    val rimAlpha = (1f - d) * fade * 0.45f
-                    drawImage(
-                        image = imageBitmap,
-                        dstOffset = IntOffset(dstOffset.x - rimOffset, dstOffset.y - rimOffset),
-                        dstSize = IntSize(dstSize.width + rimOffset * 2, dstSize.height + rimOffset * 2),
-                        alpha = rimAlpha,
-                        colorFilter = ColorFilter.tint(markColor),
-                    )
-                }
             }
         }
     }

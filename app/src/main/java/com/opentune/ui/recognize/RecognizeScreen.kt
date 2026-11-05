@@ -88,11 +88,16 @@ import com.opentune.data.model.SearchResult
 import com.opentune.data.model.Song
 import com.opentune.data.recognize.Recognized
 import com.opentune.data.recognize.Recognizer
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toBitmap
 import com.opentune.ui.components.Artwork
 import com.opentune.ui.components.Haptics
-import com.opentune.ui.components.MARK_VIEWPORT
-import com.opentune.ui.components.markPath
 import com.opentune.ui.components.rememberHaptics
+import com.opentune.ui.settings.AppIcon
 import com.opentune.ui.theme.songAccents
 import kotlin.math.PI
 import kotlin.math.cos
@@ -305,7 +310,11 @@ private fun FoundCard(song: Recognized, finding: Boolean, onPlay: () -> Unit, on
 @Composable
 private fun ListenOrb(listening: Boolean, level: () -> Float, modifier: Modifier, onClick: () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val mark = remember(context) { markPath(context) }
+    val activeIcon = remember { AppIcon.selected(context) }
+    val markBitmap = remember(activeIcon) {
+        val drawable = ResourcesCompat.getDrawable(context.resources, activeIcon.foregroundRes, context.theme)
+        drawable?.toBitmap(512, 512)?.asImageBitmap()
+    }
     val (a, b) = songAccents()
     val clock = rememberInfiniteTransition(label = "orb")
     val t by clock.animateFloat(0f, 1f, infiniteRepeatable(tween(12_000, easing = LinearEasing), RepeatMode.Restart), label = "turn")
@@ -366,10 +375,17 @@ private fun ListenOrb(listening: Boolean, level: () -> Float, modifier: Modifier
                 end = Offset(c.x - base * cos(angle0), c.y - base * sin(angle0)),
             ),
         )
-        // The mark, white, beating a little with the sound.
-        val markScale = base * 1.5f / MARK_VIEWPORT * (1f + 0.08f * l * o)
-        translate(c.x - MARK_VIEWPORT / 2f * markScale, c.y - MARK_VIEWPORT / 2f * markScale) {
-            scale(markScale, markScale, pivot = Offset.Zero) { drawPath(mark, Color.White) }
+        // The mark, 100% authentic foreground bitmap, white, beating a little with the sound.
+        if (markBitmap != null) {
+            val markSize = (base * 1.55f * (1f + 0.08f * l * o)).toInt()
+            val dstOffset = IntOffset((c.x - markSize / 2f).toInt(), (c.y - markSize / 2f).toInt())
+            val dstSize = IntSize(markSize, markSize)
+            drawImage(
+                image = markBitmap,
+                dstOffset = dstOffset,
+                dstSize = dstSize,
+                colorFilter = ColorFilter.tint(Color.White),
+            )
         }
     }
 }
