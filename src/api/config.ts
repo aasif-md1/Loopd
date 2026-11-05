@@ -3,6 +3,9 @@
  * Reads API keys from environment variables.
  */
 export const ApiConfig = {
+  ytmusic: {
+    baseUrl: (process.env.EXPO_PUBLIC_YTMUSIC_API_URL || 'http://localhost:8000').replace(/\/$/, ''),
+  },
   jamendo: {
     baseUrl: 'https://api.jamendo.com/v3.0',
     clientId: process.env.EXPO_PUBLIC_JAMENDO_CLIENT_ID || '',

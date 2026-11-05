@@ -1,8 +1,10 @@
 /**
  * Loopd Music Service — Unified Abstraction Layer
- * JioSaavn is PRIMARY for all real Indian & International music (320kbps full songs).
- * Deezer & Jamendo act as fallbacks/discovery.
+ * YouTube Music (via Loopd Backend) is PRIMARY for real Bollywood, Punjabi,
+ * International Pop, and regional music catalogs with high-fidelity streams.
+ * JioSaavn, Deezer & Jamendo act as fallbacks/discovery.
  */
+import { YTMusicProvider } from './providers/ytmusic';
 import { JioSaavnProvider } from './providers/jiosaavn';
 import { DeezerProvider } from './providers/deezer';
 import { JamendoProvider } from './providers/jamendo';
@@ -17,6 +19,7 @@ import type {
 } from '../types';
 
 const providers: MusicProvider[] = [
+  YTMusicProvider,
   JioSaavnProvider,
   DeezerProvider,
   JamendoProvider,
@@ -28,7 +31,7 @@ function dedupeTracks(tracks: Track[]): Track[] {
   const seen = new Map<string, Track>();
   for (const track of tracks) {
     const key = `${track.title.toLowerCase().trim()}|${track.artist.toLowerCase().trim()}`;
-    // Prefer non-preview tracks (JioSaavn is full length)
+    // Prefer non-preview tracks (YTMusic & JioSaavn are full length)
     if (!seen.has(key) || (seen.get(key)?.previewOnly && !track.previewOnly)) {
       seen.set(key, track);
     }
@@ -75,15 +78,24 @@ async function withFallback<T>(
 }
 
 export const MusicService = {
-  /** Search across providers — JioSaavn results take top priority */
+  /** Search across providers — YTMusic results take top priority */
   async search(query: string, limit = 20, offset = 0): Promise<SearchResults> {
+    try {
+      const ytResults = await YTMusicProvider.search(query, limit, offset);
+      if (ytResults.tracks.length > 0) {
+        return ytResults;
+      }
+    } catch (err) {
+      console.warn('[MusicService] YTMusic search failed, trying JioSaavn/fallbacks:', err);
+    }
+
     try {
       const jioResults = await JioSaavnProvider.search(query, limit, offset);
       if (jioResults.tracks.length > 0) {
         return jioResults;
       }
     } catch (err) {
-      console.warn('[MusicService] JioSaavn search failed, trying fallbacks:', err);
+      console.warn('[MusicService] JioSaavn search failed, trying others:', err);
     }
 
     const results = await Promise.allSettled(
@@ -175,28 +187,28 @@ export const MusicService = {
     return withFallback((p) => p.getPlaylist(id), null);
   },
 
-  /** Charts — JioSaavn real top 50 charts, fallback to Deezer */
+  /** Charts — YTMusic top charts, fallback to JioSaavn & Deezer */
   async getCharts(limit = 20): Promise<Track[]> {
     return withFallback(
       (p) => p.getCharts(limit),
       [],
-      [JioSaavnProvider, DeezerProvider, JamendoProvider]
+      [YTMusicProvider, JioSaavnProvider, DeezerProvider, JamendoProvider]
     );
   },
 
-  /** Trending — JioSaavn real trending hits */
+  /** Trending — YTMusic real trending hits */
   async getTrending(limit = 20): Promise<Track[]> {
     return withFallback(
       (p) => p.getTrending(limit),
       [],
-      [JioSaavnProvider, DeezerProvider, JamendoProvider]
+      [YTMusicProvider, JioSaavnProvider, DeezerProvider, JamendoProvider]
     );
   },
 
-  /** Genres — JioSaavn curated genres */
+  /** Genres — Curated genres */
   async getGenres(): Promise<Genre[]> {
     try {
-      return await JioSaavnProvider.getGenres();
+      return await YTMusicProvider.getGenres();
     } catch {
       return [
         { id: 'bollywood', name: 'Bollywood Hits', color: '#E13300' },
@@ -214,7 +226,7 @@ export const MusicService = {
     return withFallback(
       (p) => p.getNewReleases(limit),
       [],
-      [DeezerProvider, JioSaavnProvider]
+      [YTMusicProvider, DeezerProvider, JioSaavnProvider]
     );
   },
 
@@ -230,14 +242,34 @@ export const MusicService = {
     return withFallback((p) => p.getStreamUrl(trackId), null);
   },
 
+  /** Similar / Radio tracks for continuous playback */
+  async getSimilarTracks(trackId: string, limit = 20): Promise<Track[]> {
+    if (trackId.startsWith('ytmusic-')) {
+      try {
+        const tracks = await YTMusicProvider.getSimilarTracks(trackId, limit);
+        if (tracks.length > 0) return tracks;
+      } catch {}
+    }
+    return [];
+  },
+
+  /** Auto-complete search suggestions */
+  async getSearchSuggestions(query: string): Promise<string[]> {
+    try {
+      return await YTMusicProvider.getSearchSuggestions(query);
+    } catch {
+      return [];
+    }
+  },
+
   /** Tracks by genre / tag */
   async getTracksByGenre(genre: string, limit = 20): Promise<Track[]> {
     try {
-      const res = await JioSaavnProvider.search(`${genre} hits`, limit);
-      if (res.tracks.length > 0) return res.tracks;
+      const tracks = await YTMusicProvider.getTracksByGenre(genre, limit);
+      if (tracks.length > 0) return tracks;
     } catch {}
     try {
-      const res = await DeezerProvider.search(genre, limit);
+      const res = await JioSaavnProvider.search(`${genre} hits`, limit);
       if (res.tracks.length > 0) return res.tracks;
     } catch {}
     return [];
@@ -309,7 +341,7 @@ export const MusicService = {
     ];
 
     try {
-      const res = await JioSaavnProvider.search('Arijit Singh Pritam Diljit', 10);
+      const res = await YTMusicProvider.search('Arijit Singh Pritam Diljit', 10);
       if (res.artists.length > 0) {
         return [...res.artists, ...defaultStars].slice(0, limit);
       }
@@ -320,6 +352,7 @@ export const MusicService = {
 
 /** Get the correct provider adapter based on ID prefix */
 function getProviderForId(id: string): MusicProvider | null {
+  if (id.startsWith('ytmusic-')) return YTMusicProvider;
   if (id.startsWith('jiosaavn-')) return JioSaavnProvider;
   if (id.startsWith('jamendo-')) return JamendoProvider;
   if (id.startsWith('deezer-')) return DeezerProvider;

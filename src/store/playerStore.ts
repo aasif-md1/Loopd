@@ -190,10 +190,17 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const { currentTrack, queue } = get();
     if (!currentTrack) return;
     try {
-      // Find similar tracks by artist or query
-      const query = currentTrack.artist.split(',')[0].trim();
-      const res = await MusicService.search(query, 10);
-      const newTracks = res.tracks.filter(
+      let candidateTracks: Track[] = [];
+      if (currentTrack.id.startsWith('ytmusic-')) {
+        candidateTracks = await MusicService.getSimilarTracks(currentTrack.id, 10);
+      }
+      if (candidateTracks.length === 0) {
+        // Fallback: Find similar tracks by artist or query
+        const query = currentTrack.artist.split(',')[0].trim();
+        const res = await MusicService.search(query, 10);
+        candidateTracks = res.tracks;
+      }
+      const newTracks = candidateTracks.filter(
         (t) => !queue.some((q) => q.id === t.id)
       );
       if (newTracks.length > 0) {

@@ -79,7 +79,7 @@ export interface SearchResults {
   playlists: Playlist[];
 }
 
-export type MusicProviderName = 'jiosaavn' | 'jamendo' | 'audius' | 'deezer' | 'custom';
+export type MusicProviderName = 'ytmusic' | 'jiosaavn' | 'jamendo' | 'audius' | 'deezer' | 'custom';
 
 export interface PaginatedResponse<T> {
   data: T[];

@@ -46,6 +46,12 @@ yarn-error.*
 .env
 .env*.local
 
+# Python Backend & Virtual Environments
+backend/venv/
+venv/
+__pycache__/
+*.pyc
+
 # System & IDE
 .DS_Store
 *.pem
