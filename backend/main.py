@@ -162,7 +162,7 @@ def map_track(item: Dict[str, Any], base_url: str = "") -> Optional[Dict[str, An
 
 
 def extract_audio_url(video_id: str) -> str:
-    """Extract direct YouTube high-fidelity audio stream URL using yt-dlp."""
+    """Extract direct YouTube high-fidelity audio stream URL using yt-dlp with android client bypass."""
     now = time.time()
     cached = STREAM_CACHE.get(video_id)
     if cached:
@@ -171,23 +171,51 @@ def extract_audio_url(video_id: str) -> str:
             return url
 
     video_url = f"https://www.youtube.com/watch?v={video_id}"
-    ydl_opts = {
-        "format": "bestaudio[ext=m4a]/bestaudio/best",
-        "quiet": True,
-        "no_warnings": True,
-        "skip_download": True,
-        "nocheckcertificate": True,
-        "socket_timeout": 12,
-    }
 
+    # Priority 1: Android client (cleanly bypasses bot checks and JavaScript signature solver on datacenter IPs)
     try:
+        android_opts = {
+            "quiet": True,
+            "no_warnings": True,
+            "skip_download": True,
+            "nocheckcertificate": True,
+            "socket_timeout": 12,
+            "extractor_args": {
+                "youtube": {
+                    "player_client": ["android"]
+                }
+            },
+        }
+        with yt_dlp.YoutubeDL(android_opts) as ydl:
+            info = ydl.extract_info(video_url, download=False)
+            formats = [f for f in info.get("formats", []) if f.get("acodec") != "none" and f.get("url")]
+            if formats:
+                m4a = [f for f in formats if f.get("ext") == "m4a" or "mp4" in str(f.get("ext", ""))]
+                cands = m4a if m4a else formats
+                cands.sort(key=lambda x: x.get("abr") or x.get("tbr") or 0, reverse=True)
+                stream_url = cands[0].get("url")
+                if stream_url:
+                    STREAM_CACHE[video_id] = (stream_url, now + CACHE_TTL)
+                    return stream_url
+    except Exception as e:
+        print(f"[yt-dlp android extraction error] {e}")
+
+    # Priority 2: Standard client fallback
+    try:
+        ydl_opts = {
+            "format": "bestaudio[ext=m4a]/bestaudio/best",
+            "quiet": True,
+            "no_warnings": True,
+            "skip_download": True,
+            "nocheckcertificate": True,
+            "socket_timeout": 12,
+        }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(video_url, download=False)
             stream_url = info.get("url")
             if not stream_url and "formats" in info:
                 audio_formats = [f for f in info["formats"] if f.get("acodec") != "none"]
                 if audio_formats:
-                    # Prefer m4a (itag 140 / AAC)
                     m4a = [f for f in audio_formats if f.get("ext") == "m4a" or "mp4" in str(f.get("ext", ""))]
                     cands = m4a if m4a else audio_formats
                     cands.sort(key=lambda x: x.get("abr") or x.get("tbr") or 0, reverse=True)
@@ -197,9 +225,9 @@ def extract_audio_url(video_id: str) -> str:
                 STREAM_CACHE[video_id] = (stream_url, now + CACHE_TTL)
                 return stream_url
     except Exception as e:
-        print(f"[yt-dlp extraction error] {e}")
+        print(f"[yt-dlp standard client error] {e}")
 
-    # Fallback to general yt-dlp without strict format filter
+    # Priority 3: General fallback across all formats
     try:
         with yt_dlp.YoutubeDL({"quiet": True, "skip_download": True, "nocheckcertificate": True}) as ydl:
             info = ydl.extract_info(video_url, download=False)
@@ -209,7 +237,7 @@ def extract_audio_url(video_id: str) -> str:
                     STREAM_CACHE[video_id] = (url, now + CACHE_TTL)
                     return url
     except Exception as e:
-        print(f"[yt-dlp fallback error] {e}")
+        print(f"[yt-dlp general fallback error] {e}")
 
     raise HTTPException(status_code=500, detail="Could not extract audio stream from any available source")
 
