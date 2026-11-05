@@ -42,7 +42,7 @@ import type { Track } from '@/src/types';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 function formatListeners(num?: number): string {
-  if (!num) return '1,420,890 monthly listeners';
+  if (!num) return 'Popular YouTube Music Artist';
   return `${num.toLocaleString()} monthly listeners`;
 }
 
@@ -100,7 +100,7 @@ export default function ArtistScreen() {
         {/* Hero Banner */}
         <View style={styles.heroContainer}>
           <Image
-            source={{ uri: artist?.image }}
+            source={{ uri: artist?.image || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1000' }}
             style={styles.heroImage}
             contentFit="cover"
             transition={300}
@@ -199,11 +199,11 @@ export default function ArtistScreen() {
         )}
 
         {/* About Section */}
-        {artist?.bio && (
+        {Boolean(artist?.bio && artist.bio !== '[]' && artist.bio.trim().length > 0) && (
           <View style={styles.aboutContainer}>
             <SectionHeader title="About" />
             <View style={styles.aboutCard}>
-              <Text style={styles.aboutText}>{artist.bio}</Text>
+              <Text style={styles.aboutText}>{artist?.bio}</Text>
             </View>
           </View>
         )}

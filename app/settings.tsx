@@ -428,7 +428,7 @@ export default function SettingsScreen() {
           <View style={styles.divider} />
           <View style={styles.row}>
             <Text style={styles.rowTitle}>Licenses & Credits</Text>
-            <Text style={styles.rowSubtitle}>JioSaavn • Jamendo • Open Source</Text>
+            <Text style={styles.rowSubtitle}>YouTube Music • Jamendo • Open Source</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.row}>

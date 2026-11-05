@@ -29,9 +29,7 @@ function getBaseUrl(): string {
 function normalizeTrack(raw: any): Track {
   const videoId = (raw.id || '').replace(/^ytmusic-/, '');
   const base = getBaseUrl();
-  const directStreamUrl = raw.streamUrl?.startsWith('http')
-    ? raw.streamUrl
-    : `${base}/stream/${videoId}`;
+  const directStreamUrl = `${base}/stream/${videoId}`;
 
   return {
     id: raw.id?.startsWith('ytmusic-') ? raw.id : `ytmusic-${videoId}`,
@@ -114,17 +112,9 @@ export const YTMusicProvider: MusicProvider & {
   },
 
   async getStreamUrl(trackId: string): Promise<string | null> {
-    try {
-      const cleanId = trackId.replace(/^ytmusic-/, '');
-      const base = getBaseUrl();
-      const res = await client.get(`${base}/stream-url/${cleanId}`);
-      return res.data?.streamUrl || `${base}/stream/${cleanId}`;
-    } catch (err) {
-      console.warn('[YTMusic] getStreamUrl failed:', err);
-      const cleanId = trackId.replace(/^ytmusic-/, '');
-      const base = getBaseUrl();
-      return `${base}/stream/${cleanId}`;
-    }
+    const cleanId = trackId.replace(/^ytmusic-/, '');
+    const base = getBaseUrl();
+    return `${base}/stream/${cleanId}`;
   },
 
   async getCharts(limit = 30): Promise<Track[]> {

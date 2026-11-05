@@ -8,9 +8,9 @@ import time
 import os
 import requests
 from typing import Optional, List, Dict, Any
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 from ytmusicapi import YTMusic
 import yt_dlp
 
@@ -168,9 +168,14 @@ def extract_audio_url(video_id: str) -> str:
                 formats = data.get("adaptiveFormats", [])
                 audio_formats = [f for f in formats if "audio" in f.get("type", "") and f.get("url")]
                 if audio_formats:
-                    # Pick highest bitrate audio stream
-                    audio_formats.sort(key=lambda x: int(x.get("bitrate", 0)), reverse=True)
-                    stream_url = audio_formats[0].get("url")
+                    # Prefer m4a / mp4 (AAC audio) for universal native playback on Android, iOS, Windows, and Web
+                    m4a_formats = [
+                        f for f in audio_formats
+                        if "mp4" in f.get("type", "").lower() or "m4a" in f.get("container", "").lower()
+                    ]
+                    candidates = m4a_formats if m4a_formats else audio_formats
+                    candidates.sort(key=lambda x: int(x.get("bitrate", 0)), reverse=True)
+                    stream_url = candidates[0].get("url")
                     if stream_url:
                         STREAM_CACHE[video_id] = (stream_url, now + CACHE_TTL)
                         return stream_url
@@ -242,19 +247,66 @@ def health():
 
 
 @app.get("/stream/{video_id}")
-def stream(video_id: str):
-    """307 Redirect directly to YouTube's CDN audio stream."""
+def stream(video_id: str, request: Request):
+    """
+    Proxy high-fidelity audio stream directly through Render.
+    Bypasses YouTube CDN IP-locking (which throws 403 Forbidden on mobile/desktop clients).
+    Supports HTTP Range requests for seeking and fast buffering.
+    """
     clean_id = video_id.replace("ytmusic-", "")
     stream_url = extract_audio_url(clean_id)
-    return RedirectResponse(url=stream_url, status_code=307)
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    }
+    range_header = request.headers.get("range")
+    if range_header:
+        headers["Range"] = range_header
+
+    try:
+        resp = requests.get(stream_url, headers=headers, stream=True, timeout=20)
+    except Exception:
+        STREAM_CACHE.pop(clean_id, None)
+        stream_url = extract_audio_url(clean_id)
+        resp = requests.get(stream_url, headers=headers, stream=True, timeout=20)
+
+    if resp.status_code not in (200, 206):
+        STREAM_CACHE.pop(clean_id, None)
+        stream_url = extract_audio_url(clean_id)
+        resp = requests.get(stream_url, headers=headers, stream=True, timeout=20)
+
+    response_headers = {
+        "Accept-Ranges": "bytes",
+        "Content-Type": resp.headers.get("Content-Type", "audio/mp4"),
+    }
+    for h in ("Content-Length", "Content-Range", "Cache-Control"):
+        if h in resp.headers:
+            response_headers[h] = resp.headers[h]
+
+    def iter_stream():
+        try:
+            for chunk in resp.iter_content(chunk_size=65536):
+                if chunk:
+                    yield chunk
+        finally:
+            resp.close()
+
+    return StreamingResponse(
+        iter_stream(),
+        status_code=resp.status_code,
+        headers=response_headers,
+    )
 
 
 @app.get("/stream-url/{video_id}")
-def stream_url(video_id: str):
-    """Return JSON containing direct stream URL."""
+def stream_url(video_id: str, request: Request):
+    """Return JSON containing proxy stream URL for clients."""
     clean_id = video_id.replace("ytmusic-", "")
-    url = extract_audio_url(clean_id)
-    return {"streamUrl": url, "videoId": clean_id}
+    base = str(request.base_url).rstrip("/")
+    return {
+        "streamUrl": f"{base}/stream/{clean_id}",
+        "videoId": clean_id,
+    }
 
 
 @app.get("/search")

@@ -1193,7 +1193,7 @@ export function NowPlayingScreen() {
               <View>
                 <Text style={{ color: Colors.textSecondary, fontSize: 12 }}>SOURCE PROVIDER</Text>
                 <Text style={{ color: Colors.primary, fontSize: 14, fontWeight: '700' }}>
-                  Music provided by JioSaavn
+                  Music provided by YouTube Music
                 </Text>
               </View>
               <View>

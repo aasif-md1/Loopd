@@ -148,6 +148,21 @@ export const MusicService = {
   },
 
   async getArtist(id: string): Promise<Artist | null> {
+    if (id.startsWith('ytmusic-')) {
+      try {
+        const art = await YTMusicProvider.getArtist(id);
+        if (art) return art;
+      } catch {}
+    }
+    // Search YouTube Music for artist
+    const cleanQuery = id.replace(/^(ytmusic|jiosaavn)-/, '').replace(/[-_]/g, ' ');
+    try {
+      const searchRes = await YTMusicProvider.search(cleanQuery, 3);
+      if (searchRes.artists.length > 0) {
+        return searchRes.artists[0];
+      }
+    } catch {}
+
     const provider = getProviderForId(id);
     if (provider) {
       try {
@@ -158,6 +173,21 @@ export const MusicService = {
   },
 
   async getArtistTracks(id: string, limit = 20): Promise<Track[]> {
+    if (id.startsWith('ytmusic-')) {
+      try {
+        const tracks = await YTMusicProvider.getArtistTracks(id, limit);
+        if (tracks.length > 0) return tracks;
+      } catch {}
+    }
+    // Fallback: search YouTube Music for top songs
+    const cleanQuery = id.replace(/^(ytmusic|jiosaavn)-/, '').replace(/[-_]/g, ' ');
+    try {
+      const searchRes = await YTMusicProvider.search(`${cleanQuery} songs`, limit);
+      if (searchRes.tracks.length > 0) {
+        return searchRes.tracks;
+      }
+    } catch {}
+
     const provider = getProviderForId(id);
     if (provider) {
       try {
@@ -168,6 +198,20 @@ export const MusicService = {
   },
 
   async getArtistAlbums(id: string, limit = 20): Promise<Album[]> {
+    if (id.startsWith('ytmusic-')) {
+      try {
+        const albums = await YTMusicProvider.getArtistAlbums(id, limit);
+        if (albums.length > 0) return albums;
+      } catch {}
+    }
+    const cleanQuery = id.replace(/^(ytmusic|jiosaavn)-/, '').replace(/[-_]/g, ' ');
+    try {
+      const searchRes = await YTMusicProvider.search(`${cleanQuery} albums`, limit);
+      if (searchRes.albums.length > 0) {
+        return searchRes.albums;
+      }
+    } catch {}
+
     const provider = getProviderForId(id);
     if (provider) {
       try {
@@ -275,77 +319,95 @@ export const MusicService = {
     return [];
   },
 
-  /** Popular artists — Top Indian & Global stars */
+  /** Popular artists — Top Indian & Global stars from YouTube Music */
   async getPopularArtists(limit = 20): Promise<Artist[]> {
     const defaultStars: Artist[] = [
       {
-        id: 'jiosaavn-459320',
+        id: 'ytmusic-UCDxKh1gFWeYsqePvgVzmPoQ',
         name: 'Arijit Singh',
-        image: 'https://c.saavncdn.com/artists/Arijit_Singh_004_20241118063717_500x500.jpg',
-        provider: 'jiosaavn',
+        image: 'https://lh3.googleusercontent.com/W_yOqnKSDYyeVOY_AsXhuAtb6rW3vCL3GtJ9DA1GxWOrJfyeSOqzvTv_TkFHijdkVPXWutASBlRFPg=w544-h544-p-l90-rj',
+        provider: 'ytmusic',
       },
       {
-        id: 'jiosaavn-468245',
-        name: 'Diljit Dosanjh',
-        image: 'https://c.saavncdn.com/artists/Diljit_Dosanjh_006_20231025143324_500x500.jpg',
-        provider: 'jiosaavn',
-      },
-      {
-        id: 'jiosaavn-456323',
+        id: 'ytmusic-UCCTN01plFzn4npREHKT2_9Q',
         name: 'Pritam',
-        image: 'https://c.saavncdn.com/artists/Pritam_Chakraborty-20170711073326_500x500.jpg',
-        provider: 'jiosaavn',
+        image: 'https://yt3.googleusercontent.com/sjGMYJQ1J3FZEIBsMYUztMjjYOM4-NJ24CjmIHqxTWCxAM1YgjL-d_17u7_PRhTouOwwAjbu-2x5S6I=w544-h544-p-l90-rj',
+        provider: 'ytmusic',
       },
       {
-        id: 'jiosaavn-455132',
+        id: 'ytmusic-UCJ2m-WpROlZCiZZID9r7NSQ',
+        name: 'Diljit Dosanjh',
+        image: 'https://yt3.googleusercontent.com/7EYXXMXY594V8y4sZT2aawmdKgDAGTu5jNm9C-HpR3jY9cZJ0NMxS__nZKBdWZ1PUpJPjc2BAA=w544-h544-l90-rj',
+        provider: 'ytmusic',
+      },
+      {
+        id: 'ytmusic-UCrC-7fsdTCYeaRBpwA6j-Eg',
         name: 'Shreya Ghoshal',
-        image: 'https://c.saavncdn.com/artists/Shreya_Ghoshal_004_20230616110931_500x500.jpg',
-        provider: 'jiosaavn',
+        image: 'https://yt3.googleusercontent.com/PgINZNe0qVxgMSXKG5vF82bNN4WCC12zgWsz9I7OLs4CLF9Cn0Vxq7Xc1ToupnzXrCv0nKfe3VM=w544-h544-l90-rj',
+        provider: 'ytmusic',
       },
       {
-        id: 'jiosaavn-889657',
-        name: 'AP Dhillon',
-        image: 'https://c.saavncdn.com/artists/AP_Dhillon_000_20221011114409_500x500.jpg',
-        provider: 'jiosaavn',
-      },
-      {
-        id: 'jiosaavn-1144287',
-        name: 'Karan Aujla',
-        image: 'https://c.saavncdn.com/artists/Karan_Aujla_004_20230616110931_500x500.jpg',
-        provider: 'jiosaavn',
-      },
-      {
-        id: 'jiosaavn-455125',
+        id: 'ytmusic-UCVGomUS__PL0c4jDXa0QwXA',
         name: 'Atif Aslam',
-        image: 'https://c.saavncdn.com/artists/Atif_Aslam_500x500.jpg',
-        provider: 'jiosaavn',
+        image: 'https://yt3.googleusercontent.com/ykJkyILKum4B2oudDxjnf5WNenWWZAp-WEz0_CHp4cu0VnqB2-uaNDylItqC68WLXV62rdHDun-ahbg=w544-h544-p-l90-rj',
+        provider: 'ytmusic',
       },
       {
-        id: 'jiosaavn-455124',
-        name: 'AR Rahman',
-        image: 'https://c.saavncdn.com/artists/A_R_Rahman_004_20230616110931_500x500.jpg',
-        provider: 'jiosaavn',
+        id: 'ytmusic-UCQmNiXx378nooDuZPA2fTAg',
+        name: 'AP Dhillon',
+        image: 'https://lh3.googleusercontent.com/yJh1MZL2FvtJz3YeDAUhTRpfdUSwdotWw8XmB_An-4coKiVG4pDpUGRAPV7ooqmzBP4HAWrtjPyAfI4=w544-h544-p-l90-rj',
+        provider: 'ytmusic',
       },
       {
-        id: 'jiosaavn-1123456',
+        id: 'ytmusic-UCSmK5WX5U4gdtebWjoL81og',
+        name: 'Karan Aujla',
+        image: 'https://lh3.googleusercontent.com/k7sgqqcV5VScaMZtTmS8W_tfouLVBpgyJII0epYE2Vjw1-zzhGgUCV51aHxZn6cmZKKJgUfNlIVpZg=w544-h544-p-l90-rj',
+        provider: 'ytmusic',
+      },
+      {
+        id: 'ytmusic-UCtJe0RYzgPddQXKtWduxz_w',
+        name: 'A. R. Rahman',
+        image: 'https://yt3.googleusercontent.com/vHMOuDn8gr3SW9Pm8yFgmtYzM5kj4ayng5HKRjW0OyjG9mPK923XMVtTZTt4NUG_1aemWNLSQ27zjtA=w544-h544-l90-rj',
+        provider: 'ytmusic',
+      },
+      {
+        id: 'ytmusic-UClYV6hHlupm_S_ObS1W-DYw',
         name: 'The Weeknd',
-        image: 'https://c.saavncdn.com/artists/The_Weeknd_500x500.jpg',
-        provider: 'jiosaavn',
+        image: 'https://lh3.googleusercontent.com/U-SAmNOu4TynE818gLCfKsuHZ0U5YNEtO9mrjSI9WCCKERs98LzrCal5kajBBTQNwdcisoB2Bn-pHp4=w544-h544-p-l90-rj',
+        provider: 'ytmusic',
       },
       {
-        id: 'jiosaavn-1123457',
+        id: 'ytmusic-UCPC0L1d253x-KuMNwa05TpA',
         name: 'Taylor Swift',
-        image: 'https://c.saavncdn.com/artists/Taylor_Swift_500x500.jpg',
-        provider: 'jiosaavn',
+        image: 'https://yt3.googleusercontent.com/RCpTA6EXJQyjVFDosWOKa2SMmqkua_lA9mHPDWWciLwgqpZLz-k8rXWRF_367trrQ7up9BUwCbk6kRk=w544-h544-p-l90-rj',
+        provider: 'ytmusic',
+      },
+      {
+        id: 'ytmusic-UCVfSAUepe_FzP6ge6WexO5Q',
+        name: 'Badshah',
+        image: 'https://yt3.googleusercontent.com/bbR8znm7CX07mCGQH-M484ckFRaKkSmTjwrwuFZxQUBy7Uc5gQcintkpqDXCuSX0DdLLg2aPskZhC2s=w544-h544-p-l90-rj',
+        provider: 'ytmusic',
+      },
+      {
+        id: 'ytmusic-UCIOXXUXQ8y5ivei97JkiBAw',
+        name: 'Sidhu Moose Wala',
+        image: 'https://yt3.ggpht.com/ytc/AIdro_kiQJ0Hhp0O-tdaY1dy81-gSNujjccUlWstnpFr686ZlMk=w544-h544-l90-rj',
+        provider: 'ytmusic',
+      },
+      {
+        id: 'ytmusic-UCbRSywya_rl8YS15Lo9ttsA',
+        name: 'Anirudh Ravichander',
+        image: 'https://lh3.googleusercontent.com/wBG4jypwBcEGHd-qSbM2_4B46WPEhlOCjusCOEkxdnsoIC4WLS9LmFARZsE854pB-vAEYlsp4x2yiHE=w544-h544-p-l90-rj',
+        provider: 'ytmusic',
+      },
+      {
+        id: 'ytmusic-UCGvj8kfUV5Q6lzECIrGY19g',
+        name: 'Justin Bieber',
+        image: 'https://lh3.googleusercontent.com/4ULlRiFBFglNemZJyKn6_e2-iOIdJEbgBgq_79RQclndG6pge0yGgS2k2On6E1FkCJzenyHkHRzkvjFp=w544-h544-p-l90-rj',
+        provider: 'ytmusic',
       },
     ];
 
-    try {
-      const res = await YTMusicProvider.search('Arijit Singh Pritam Diljit', 10);
-      if (res.artists.length > 0) {
-        return [...res.artists, ...defaultStars].slice(0, limit);
-      }
-    } catch {}
     return defaultStars.slice(0, limit);
   },
 };
