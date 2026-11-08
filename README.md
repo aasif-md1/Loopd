@@ -2,16 +2,16 @@
 
 <div align="center">
 
-<img src="icons/icon_loopd.png" width="128" height="128" style="border-radius: 28px;" alt="Loopd App Icon" />
+<img src="icons/icon_loopd.png" width="180" alt="Loopd Signature Icon" />
 
 ### The Pure, High-Fidelity Music Experience
 
 **Loopd** is an ultra-fast, modern music streaming and discovery application engineered with high-fidelity lossless audio, real-time synchronized lyrics, intelligent ambient sound recognition, dynamic theme engines, and tailored icon personalization.
 
-[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Wear%20OS-brightgreen.svg)](#supported-platforms)
-[![Audio](https://img.shields.io/badge/Audio-Lossless%20FLAC%20%7C%20Hi--Res-blue.svg)](#-high-fidelity-lossless-audio-engine)
-[![Framework](https://img.shields.io/badge/Framework-Jetpack%20Compose-purple.svg)](#-modern-ui--experience)
-[![License](https://img.shields.io/badge/License-GPLv3-green.svg)](#-license)
+[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Wear%20OS-34A853)](#supported-platforms)
+[![Audio](https://img.shields.io/badge/Audio-Lossless%20FLAC%20%7C%20Hi--Res-1A73E8)](#-high-fidelity-lossless-audio-engine)
+[![Framework](https://img.shields.io/badge/Framework-Jetpack%20Compose-4285F4)](#-modern-ui--experience)
+[![License](https://img.shields.io/badge/License-GPLv3-FBBC04)](#-license)
 
 </div>
 
@@ -23,10 +23,10 @@ Loopd offers **6 distinct handcrafted launcher icons**, each celebrating a uniqu
 
 <div align="center">
 
-| <img src="icons/icon_loopd.png" width="110" alt="LooPd Icon" /><br>**LooPd**<br>*(Signature)* | <img src="icons/icon_pulse.png" width="110" alt="PULSE Icon" /><br>**PULSE**<br>*(Waveform)* | <img src="icons/icon_flow.png" width="110" alt="FLOW Icon" /><br>**FLOW**<br>*(Stream)* |
+| <img src="icons/icon_loopd.png" width="120" alt="LooPd Icon" /><br>**LooPd**<br>*(Signature)* | <img src="icons/icon_pulse.png" width="120" alt="PULSE Icon" /><br>**PULSE**<br>*(Waveform)* | <img src="icons/icon_flow.png" width="120" alt="FLOW Icon" /><br>**FLOW**<br>*(Stream)* |
 | :---: | :---: | :---: |
 | Concentric acoustic ripples radiating outward from the core frequency | Dynamic audio frequency waveform bar spectrum | Continuous melodic loop stream with harmonic fluid curves |
-| <img src="icons/icon_axis.png" width="110" alt="AXIS Icon" /><br>**AXIS**<br>*(Geometric)* | <img src="icons/icon_tune.png" width="110" alt="TUNE Icon" /><br>**TUNE**<br>*(Acoustic)* | <img src="icons/icon_orbit.png" width="110" alt="ORBIT Icon" /><br>**ORBIT**<br>*(Satellite)* |
+| <img src="icons/icon_axis.png" width="120" alt="AXIS Icon" /><br>**AXIS**<br>*(Geometric)* | <img src="icons/icon_tune.png" width="120" alt="TUNE Icon" /><br>**TUNE**<br>*(Acoustic)* | <img src="icons/icon_orbit.png" width="120" alt="ORBIT Icon" /><br>**ORBIT**<br>*(Satellite)* |
 | Precision geometric alignment cross-rotor matrix | Headphone acoustic resonance curve and tonal contour | Constellation satellite synchronization matrix |
 
 </div>
