@@ -17,7 +17,10 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateListOf
@@ -209,89 +212,142 @@ fun DesktopApp(startPanel: SidePanel? = null) {
     }
 
     DesktopTheme(artworkSeed = rememberArtworkSeed(song?.thumbnailUrl)) {
-        // Windows 11's Mica or Acrylic behind the window, when it's on: the page lets it through.
-        val material by WindowsFrame.activeMaterial.collectAsState()
-        val chosenMaterial by WindowsFrame.material.collectAsState()
-        val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
-        androidx.compose.runtime.LaunchedEffect(dark, chosenMaterial) { WindowsFrame.applyMaterial(dark) }
-        val clear = material != WindowsFrame.Material.OFF
-        // The ink named outright: Surface works it out from its colour only when that is the
-        // theme's own, and the see-through page over a material isn't, which left text black.
+        val haze = rememberHazeState()
         Surface(
-            color = MaterialTheme.colorScheme.background.copy(alpha = if (clear) MATERIAL_PAGE_ALPHA else 1f),
+            color = MaterialTheme.colorScheme.background,
             contentColor = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.fillMaxSize(),
         ) {
-            BoxWithConstraints(Modifier.fillMaxSize()) {
-                val roomForPanel = maxWidth >= 1100.dp
-                val panelShown = panel != null && song != null && roomForPanel
-                val folded = maxWidth < 900.dp
-                val haze = rememberHazeState()
-                // Behind the whole window, so the see-through sidebar and side column take its colour
-                // as well as the page; a source for the top bar's blur under the page's own.
-                Box(Modifier.fillMaxSize().hazeSource(haze, zIndex = 0f)) { WindowBackdrop(song?.thumbnailUrl, clear) }
-                Column(Modifier.fillMaxSize()) {
-                    // 1. Genuine Windows Title Bar at the very top
-                    DesktopTitleBar(
-                        canGoBack = history.isNotEmpty(),
-                        onBack = back,
-                    )
-
-                    // 2. Middle Row: Sidebar + Main Pages Area + Right Panel
-                    Row(Modifier.weight(1f).fillMaxWidth()) {
-                        Sidebar(sideSelected, folded = folded) { key ->
-                            when (key) {
-                                is Tab -> go(Page(key))
-                                is Shelf -> go(Page(Tab.LIBRARY, key))
-                                is PlaylistKey -> go(Page(Tab.LIBRARY, Shelf.PLAYLISTS, key))
-                            }
-                        }
-                        Box(Modifier.weight(1f).fillMaxHeight()) {
-                            CompositionLocalProvider(
-                                LocalPageTop provides 12.dp,
-                                LocalPageBottom provides if (song != null) 92.dp else 40.dp,
-                                com.opentune.ui.components.LocalHazeState provides haze.takeIf { !ui.reduceBlur },
-                            ) {
-                                Box(Modifier.fillMaxSize().hazeSource(haze, zIndex = 1f)) {
-                                    Pages(
-                                        page = page,
-                                        still = ui.reduceAnimation,
-                                        queue = queue,
-                                        index = index,
-                                        query = query,
-                                        onQuery = { query = it },
-                                        searches = searches,
-                                        onSearch = { searches++ },
-                                        onOpen = { go(page.copy(opened = it)) },
-                                        onOpenAny = { go(page.copy(opened = it)) },
-                                        onShelf = { go(Page(Tab.LIBRARY, it)) },
-                                        onPlaylist = { go(Page(Tab.LIBRARY, Shelf.PLAYLISTS, PlaylistKey(it))) },
-                                        onBack = { back() },
-                                    )
-                                }
-                            }
-                        }
-                        val shown = rememberLast(panel)
-                        AnimatedVisibility(
-                            visible = panelShown,
-                            enter = if (ui.reduceAnimation) fadeIn(tween(140)) else expandHorizontally(Motion.soft(), Alignment.Start) + fadeIn(tween(220, 80)),
-                            exit = if (ui.reduceAnimation) fadeOut(tween(120)) else shrinkHorizontally(tween(260), Alignment.Start) + fadeOut(tween(160)),
-                        ) {
-                            if (song != null && shown != null) RightPanel(shown, song, queue, index, onPanel = { panel = it }, onOpenArtist = { go(page.copy(opened = it)) })
-                        }
-                    }
-
-                    // 3. Android-style bottom docked player bar
-                    BottomPlayerBar(
-                        song = song,
-                        panel = panel.takeIf { panelShown },
-                        onPanel = { p -> panel = if (panel == p && panelShown) null else p },
-                        onOpenPlayer = { playerOpen = true },
-                        panelRoom = roomForPanel,
-                    )
+            Box(Modifier.fillMaxSize()) {
+                // Background artwork dynamic glow
+                Box(Modifier.fillMaxSize().hazeSource(haze, zIndex = 0f)) {
+                    WindowBackdrop(song?.thumbnailUrl, false)
                 }
 
-                // The full player rises over everything.
+                // 1. Full Screen Content Area (Pages)
+                CompositionLocalProvider(
+                    LocalPageTop provides 56.dp,
+                    LocalPageBottom provides if (song != null) 170.dp else 100.dp,
+                    com.opentune.ui.components.LocalHazeState provides haze.takeIf { !ui.reduceBlur },
+                ) {
+                    Box(Modifier.fillMaxSize().hazeSource(haze, zIndex = 1f)) {
+                        Pages(
+                            page = page,
+                            still = ui.reduceAnimation,
+                            queue = queue,
+                            index = index,
+                            query = query,
+                            onQuery = { query = it },
+                            searches = searches,
+                            onSearch = { searches++ },
+                            onOpen = { go(page.copy(opened = it)) },
+                            onOpenAny = { go(page.copy(opened = it)) },
+                            onShelf = { go(Page(Tab.LIBRARY, it)) },
+                            onPlaylist = { go(Page(Tab.LIBRARY, Shelf.PLAYLISTS, PlaylistKey(it))) },
+                            onBack = { back() },
+                        )
+                    }
+                }
+
+                // 2. Android-style Top Bar: Loopd branding / Back navigation + Queue & Settings buttons
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .padding(horizontal = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (history.isNotEmpty() && page.opened != null) {
+                        IconButton(onClick = back) {
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        }
+                        Spacer(Modifier.width(8.dp))
+                    } else {
+                        Image(
+                            rememberLogo(Logo.APP),
+                            contentDescription = "Loopd",
+                            modifier = Modifier.size(28.dp).clip(RoundedCornerShape(6.dp)),
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            "Loopd",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+
+                    Spacer(Modifier.weight(1f))
+
+                    IconButton(onClick = { go(Page(Tab.QUEUE)) }) {
+                        Icon(
+                            Icons.AutoMirrored.Rounded.QueueMusic,
+                            contentDescription = "Up next",
+                            tint = if (page.tab == Tab.QUEUE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    IconButton(onClick = { go(Page(Tab.SETTINGS)) }) {
+                        Icon(
+                            Icons.Rounded.Settings,
+                            contentDescription = "Settings",
+                            tint = if (page.tab == Tab.SETTINGS) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+
+                // 3. Android Iconic Floating Bottom Chrome (Dock + Mini Player)
+                val dockTabs = remember {
+                    listOf(
+                        com.opentune.ui.ChromeTab("Home", Icons.Outlined.Home, Icons.Rounded.Home),
+                        com.opentune.ui.ChromeTab("Explore", Icons.Outlined.Explore, Icons.Rounded.Explore),
+                        com.opentune.ui.ChromeTab("Library", Icons.Outlined.LibraryMusic, Icons.Rounded.LibraryMusic),
+                    )
+                }
+                val selectedTabIndex = when (page.tab) {
+                    Tab.HOME -> 0
+                    Tab.NEW -> 1
+                    Tab.LIBRARY -> 2
+                    else -> null
+                }
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
+                    contentAlignment = Alignment.BottomCenter,
+                ) {
+                    Box(Modifier.widthIn(max = 680.dp).fillMaxWidth()) {
+                        com.opentune.ui.BottomChrome(
+                            inline = false,
+                            tabs = dockTabs,
+                            selected = if (page.tab == Tab.SEARCH) null else selectedTabIndex,
+                            onSelect = { idx ->
+                                when (idx) {
+                                    0 -> go(Page(Tab.HOME))
+                                    1 -> go(Page(Tab.NEW))
+                                    2 -> go(Page(Tab.LIBRARY))
+                                }
+                            },
+                            onExpand = {},
+                            searchSelected = page.tab == Tab.SEARCH,
+                            onSearch = { go(Page(Tab.SEARCH)) },
+                            mini = if (song == null) null else { _, m ->
+                                AndroidFloatingMiniPlayer(
+                                    song = song,
+                                    onExpand = { playerOpen = true },
+                                    modifier = m,
+                                )
+                            },
+                            motion = com.opentune.data.settings.DockMotion.MINIMIZE,
+                            lens = com.opentune.data.settings.DockLens.STRETCH,
+                            reduceMotion = ui.reduceAnimation,
+                        )
+                    }
+                }
+
+                // 4. The full player rises over everything (exact Android motion)
                 val full = rememberLast(song)
                 AnimatedVisibility(
                     visible = playerOpen && song != null,
@@ -299,6 +355,113 @@ fun DesktopApp(startPanel: SidePanel? = null) {
                     exit = PageMotion.playerOut(ui.playerMotion, ui.reduceAnimation),
                 ) { full?.let { NowPlaying(it, docked = false, onClose = { playerOpen = false }) } }
             }
+        }
+    }
+}
+
+/** Android signature floating mini player card */
+@Composable
+internal fun AndroidFloatingMiniPlayer(
+    song: Song,
+    onExpand: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val playing by Player.playing.collectAsState()
+    val loading by Player.loading.collectAsState()
+    val progress = rememberProgress(song)
+    val shape = RoundedCornerShape(20.dp)
+    val tint = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.90f)
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .clip(shape)
+            .glass(shape, tint)
+            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), shape)
+            .clickable(onClick = onExpand)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Artwork(
+                song.thumbnailUrl,
+                Modifier.size(48.dp),
+                RoundedCornerShape(10.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    song.title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    song.artist,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            Box(
+                Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.onSurface)
+                    .clickable(onClick = Player::toggle),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (loading) {
+                    CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.surface)
+                } else {
+                    Icon(
+                        if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                        contentDescription = if (playing) "Pause" else "Play",
+                        tint = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+            }
+            Spacer(Modifier.width(4.dp))
+            IconButton(
+                onClick = Player::next,
+                modifier = Modifier.size(36.dp),
+            ) {
+                Icon(
+                    Icons.Rounded.SkipNext,
+                    contentDescription = "Next",
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
+        val frac = progress.fraction()
+        val accent = MaterialTheme.colorScheme.primary
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp)
+                .height(2.5.dp)
+                .clip(RoundedCornerShape(1.dp))
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(frac.coerceIn(0f, 1f))
+                    .background(accent),
+            )
         }
     }
 }
