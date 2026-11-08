@@ -42,7 +42,7 @@ import org.json.JSONObject
  * Where a song can play from besides YouTube, as on the phone and the web
  * player: HTTP audio add-ons, the ones Loopd's owner publishes and any
  * the listener adds, for FLAC, and JioSaavn for 320 kbps AAC. Kept in
- * ~/.opentune/sources.json beside the library.
+ * ~/.loopd/sources.json beside the library.
  */
 internal object Addons {
     @Serializable
@@ -65,7 +65,7 @@ internal object Addons {
     data class Flac(val url: String, val provider: String, val bits: Int, val rate: Int, val durationSec: Double, val headers: Map<String, String> = emptyMap())
 
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
-    private var file = File(System.getProperty("user.home"), ".opentune/sources.json")
+    private var file = File(System.getProperty("user.home"), ".loopd/sources.json")
     private val saved = MutableStateFlow(load())
 
     private val _sources = MutableStateFlow(saved.value.sources)
@@ -316,7 +316,7 @@ internal object AddonPairing {
     data class Pairing(val id: String, val poll: String, val code: String, val link: String, val expires: Long, internal val key: PrivateKey)
 
     private val json = Json { ignoreUnknownKeys = true }
-    private var file = File(System.getProperty("user.home"), ".opentune/addon-device.json")
+    private var file = File(System.getProperty("user.home"), ".loopd/addon-device.json")
     private val http = Http.client.newBuilder().followRedirects(false).followSslRedirects(false).callTimeout(15, TimeUnit.SECONDS).build()
 
     private val _until = MutableStateFlow(stored()?.takeIf { it.expires > now(it) }?.expires ?: 0L)

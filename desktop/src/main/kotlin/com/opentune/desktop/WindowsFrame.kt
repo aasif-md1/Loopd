@@ -38,7 +38,7 @@ internal object WindowsFrame {
 
     // ---- What Settings keeps -------------------------------------------------------
 
-    private val file = File(System.getProperty("user.home"), ".opentune/window.json")
+    private val file = File(System.getProperty("user.home"), ".loopd/window.json")
     private fun saved(): JSONObject = runCatching { JSONObject(file.readText()) }.getOrDefault(JSONObject())
 
     private val _ownFrame = MutableStateFlow(saved().optBoolean("ownFrame", true))

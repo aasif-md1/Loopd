@@ -457,7 +457,7 @@ private fun ConnectedSection() {
             when (discordStatus) {
                 DiscordPresence.Status.Connected -> "The song you play shows on your Discord profile while the Discord app is open."
                 DiscordPresence.Status.NotRunning -> "Waiting for the Discord app. Open it on this computer and the song shows on your profile."
-                DiscordPresence.Status.NoApp -> "Needs a Discord application named OpenTune, which the card is titled with. Paste its id below."
+                DiscordPresence.Status.NoApp -> "Needs a Discord application named Loopd, which the card is titled with. Paste its id below."
                 DiscordPresence.Status.Off -> "Show the song you play on your Discord profile, through the Discord app on this computer."
             },
             discord, DiscordPresence::setEnabled,

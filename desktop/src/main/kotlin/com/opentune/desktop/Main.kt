@@ -13,8 +13,8 @@ import com.opentune.data.settings.AppSettings
 import com.opentune.data.subsonic.Subsonic
 import java.io.File
 
-/** Where the desktop keeps what it saves: ~/.opentune, read through the shared code's Context. */
-internal val appContext by lazy { android.content.Context(File(System.getProperty("user.home"), ".opentune")) }
+/** Where the desktop keeps what it saves: ~/.loopd, read through the shared code's Context. */
+internal val appContext by lazy { android.content.Context(File(System.getProperty("user.home"), ".loopd")) }
 
 fun main(args: Array<String>) {
     if ("--self-check" in args) return selfCheck()
