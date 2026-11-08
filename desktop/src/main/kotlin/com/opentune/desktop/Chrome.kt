@@ -41,6 +41,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Lyrics
 import androidx.compose.material.icons.rounded.Pause
@@ -139,16 +140,8 @@ internal fun Sidebar(selected: Any?, folded: Boolean, onPick: (Any) -> Unit) {
             Modifier.width(if (folded) SIDEBAR_FOLDED else SIDEBAR_WIDTH).fillMaxHeight()
                 // See-through, so the window's backdrop colours it as it does the page.
                 .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = chromeAlpha()))
-                .padding(top = DesktopWindow.topInset + if (DesktopWindow.drawsFrame) 0.dp else 12.dp, bottom = 10.dp),
+                .padding(top = 12.dp, bottom = 10.dp),
         ) {
-            // Where the app draws the window's title bar, the sidebar's head is it: the window's
-            // buttons, and room to take hold of the window by.
-            if (DesktopWindow.drawsFrame) {
-                Box(Modifier.fillMaxWidth().height(CAPTION_HEIGHT)) {
-                    Box(Modifier.matchParentSize().windowDrag())
-                    WindowButtons(Modifier.align(if (folded) Alignment.Center else Alignment.CenterStart).padding(start = if (folded) 0.dp else 10.dp))
-                }
-            }
             if (folded) {
                 SideRow(Icons.Rounded.Search, "Search", selected == Tab.SEARCH, folded) { onPick(Tab.SEARCH) }
             } else {
@@ -236,7 +229,288 @@ private fun SideRow(icon: ImageVector, label: String, selected: Boolean, folded:
     ) { row() }
 }
 
-// ---- The player bar ----------------------------------------------------------
+// ---- Window Title Bar & Bottom Player Bar -----------------------------------
+
+/**
+ * Genuine Windows Title Bar at the top of the desktop window:
+ * Left: Loopd logo + Loopd app title + Back navigation
+ * Middle: Draggable window space (double-click to maximize/restore)
+ * Right: Minimize, Maximize, Close caption buttons
+ */
+@Composable
+internal fun DesktopTitleBar(
+    canGoBack: Boolean,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(38.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = chromeAlpha())),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // App icon and title on the left
+        Row(
+            modifier = Modifier
+                .padding(start = 12.dp, end = 8.dp)
+                .fillMaxHeight(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Image(
+                rememberLogo(Logo.APP),
+                contentDescription = "Loopd",
+                modifier = Modifier.size(20.dp).clip(RoundedCornerShape(4.dp)),
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                "Loopd",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            if (canGoBack) {
+                Spacer(Modifier.width(10.dp))
+                HoverIcon(
+                    Icons.AutoMirrored.Rounded.ArrowBack,
+                    "Back",
+                    enabled = true,
+                    size = 28.dp,
+                    iconSize = 16.dp,
+                    onClick = onBack,
+                )
+            }
+        }
+
+        // Draggable window caption area in the middle
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .windowDrag(),
+        )
+
+        // Windows Caption Buttons (Minimize, Maximize, Close) on the right
+        WindowsCaptionButtons()
+    }
+}
+
+/**
+ * Bottom docked player bar, styled like Android Loopd's mini-player & modern music players:
+ * - Left: Song thumbnail, title, artist, favorite heart button
+ * - Center: Shuffle, Previous, Play/Pause circle, Next, Repeat + Seekbar with time
+ * - Right: Volume slider, Lyrics toggle, Queue toggle, Fullscreen toggle
+ */
+@Composable
+internal fun BottomPlayerBar(
+    song: Song?,
+    panel: SidePanel?,
+    onPanel: (SidePanel) -> Unit,
+    onOpenPlayer: () -> Unit,
+    modifier: Modifier = Modifier,
+    panelRoom: Boolean = true,
+) {
+    if (song == null) return
+    val playing by Player.playing.collectAsState()
+    val loading by Player.loading.collectAsState()
+    val shuffled by Player.shuffled.collectAsState()
+    val repeat by Player.repeat.collectAsState()
+    val liked by Library.liked.collectAsState()
+    val isLiked = liked.any { it.videoId == song.videoId }
+    val progress = rememberProgress(song)
+    val error by Player.error.collectAsState()
+
+    androidx.compose.foundation.layout.BoxWithConstraints(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(78.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.94f))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f), RectangleShape)
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+    ) {
+        val roomy = maxWidth >= 850.dp
+        val showTimes = maxWidth >= 600.dp
+
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // LEFT SECTION: Track Info & Like
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Clickable thumbnail
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(onClick = onOpenPlayer),
+                ) {
+                    Artwork(song.thumbnailUrl, Modifier.fillMaxSize(), RoundedCornerShape(8.dp))
+                }
+                Spacer(Modifier.width(12.dp))
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(onClick = onOpenPlayer),
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        song.title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        error ?: song.artist,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (error != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+                LikeButton(
+                    liked = isLiked,
+                    onToggle = { Library.setLiked(song, !isLiked) },
+                    size = 20.dp,
+                )
+            }
+
+            // CENTER SECTION: Playback controls + Seek line
+            Column(
+                modifier = Modifier
+                    .weight(if (roomy) 1.6f else 2f)
+                    .fillMaxHeight(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                // Buttons row
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    HoverIcon(
+                        Icons.Rounded.Shuffle,
+                        if (shuffled) "Shuffle on" else "Shuffle",
+                        enabled = true,
+                        lit = shuffled,
+                        size = 30.dp,
+                        iconSize = 17.dp,
+                        onClick = Player::toggleShuffle,
+                    )
+                    HoverIcon(
+                        Icons.Rounded.SkipPrevious,
+                        "Previous",
+                        enabled = true,
+                        size = 32.dp,
+                        iconSize = 20.dp,
+                        onClick = Player::previous,
+                    )
+                    Box(
+                        Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.onSurface)
+                            .clickable(onClick = Player::toggle),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (loading) {
+                            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.surface)
+                        } else {
+                            Icon(
+                                if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                if (playing) "Pause" else "Play",
+                                tint = MaterialTheme.colorScheme.surface,
+                                modifier = Modifier.size(22.dp),
+                            )
+                        }
+                    }
+                    HoverIcon(
+                        Icons.Rounded.SkipNext,
+                        "Next",
+                        enabled = true,
+                        size = 32.dp,
+                        iconSize = 20.dp,
+                        onClick = Player::next,
+                    )
+                    HoverIcon(
+                        if (repeat == Player.Repeat.ONE) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
+                        when (repeat) {
+                            Player.Repeat.OFF -> "Repeat off"
+                            Player.Repeat.ALL -> "Repeat all"
+                            Player.Repeat.ONE -> "Repeat this song"
+                        },
+                        enabled = true,
+                        lit = repeat != Player.Repeat.OFF,
+                        size = 30.dp,
+                        iconSize = 17.dp,
+                        onClick = Player::cycleRepeat,
+                    )
+                }
+
+                // Seek bar row
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (showTimes) {
+                        Text(
+                            Time.format(progress.positionMs),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.width(36.dp),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                        )
+                    }
+                    SeekLine(progress, Modifier.weight(1f).padding(horizontal = 8.dp))
+                    if (showTimes) {
+                        Text(
+                            Time.format(progress.durationMs),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.width(36.dp),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Start,
+                        )
+                    }
+                }
+            }
+
+            // RIGHT SECTION: Volume & Panel toggles
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End,
+            ) {
+                if (roomy) {
+                    VolumeControl(slider = true)
+                    Spacer(Modifier.width(8.dp))
+                }
+                if (panelRoom) {
+                    HoverIcon(Icons.Rounded.Lyrics, "Lyrics", enabled = true, lit = panel == SidePanel.LYRICS, size = 32.dp, iconSize = 18.dp) { onPanel(SidePanel.LYRICS) }
+                    HoverIcon(Icons.AutoMirrored.Rounded.QueueMusic, "Up next", enabled = true, lit = panel == SidePanel.QUEUE, size = 32.dp, iconSize = 19.dp) { onPanel(SidePanel.QUEUE) }
+                    HoverIcon(if (panel == SidePanel.NOW) Icons.Rounded.Info else Icons.Outlined.Info, "Now playing", enabled = true, lit = panel == SidePanel.NOW, size = 32.dp, iconSize = 18.dp) { onPanel(SidePanel.NOW) }
+                }
+                HoverIcon(
+                    Icons.Rounded.ExpandMore,
+                    "Open player",
+                    enabled = true,
+                    size = 32.dp,
+                    iconSize = 22.dp,
+                    onClick = onOpenPlayer,
+                )
+            }
+        }
+    }
+}
+
+// ---- The legacy player bar (kept for compatibility) -------------------------
 
 /**
  * Across the top of the page, frosted over what scrolls under it: back, then
@@ -368,7 +642,7 @@ private fun NowBox(song: Song?, onOpenPlayer: () -> Unit, modifier: Modifier) {
 internal fun RightPanel(panel: SidePanel, song: Song, queue: List<Song>, index: Int, onPanel: (SidePanel?) -> Unit, onOpenArtist: (ShelfItem) -> Unit) {
     Row(Modifier.width(PANEL_WIDTH).fillMaxHeight()) {
         Box(Modifier.width(1.dp).fillMaxHeight().background(MaterialTheme.colorScheme.outlineVariant))
-        Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = chromeAlpha())).padding(top = DesktopWindow.topInset)) {
+        Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = chromeAlpha())).padding(top = 8.dp)) {
             Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 8.dp, top = 12.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                     SidePanel.entries.forEach { p -> Segment(p.label, p == panel) { onPanel(p) } }

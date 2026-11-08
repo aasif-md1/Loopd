@@ -230,56 +230,65 @@ fun DesktopApp(startPanel: SidePanel? = null) {
                 // Behind the whole window, so the see-through sidebar and side column take its colour
                 // as well as the page; a source for the top bar's blur under the page's own.
                 Box(Modifier.fillMaxSize().hazeSource(haze, zIndex = 0f)) { WindowBackdrop(song?.thumbnailUrl, clear) }
-                Row(Modifier.fillMaxSize()) {
-                    Sidebar(sideSelected, folded = folded) { key ->
-                        when (key) {
-                            is Tab -> go(Page(key))
-                            is Shelf -> go(Page(Tab.LIBRARY, key))
-                            is PlaylistKey -> go(Page(Tab.LIBRARY, Shelf.PLAYLISTS, key))
-                        }
-                    }
-                    Box(Modifier.weight(1f).fillMaxHeight()) {
-                        // The page is what the frosted player bar blurs; every page starts below it.
-                        CompositionLocalProvider(
-                            LocalPageTop provides TOP_BAR_HEIGHT + DesktopWindow.topInset,
-                            LocalPageBottom provides 40.dp,
-                            com.opentune.ui.components.LocalHazeState provides haze.takeIf { !ui.reduceBlur },
-                        ) {
-                            Box(Modifier.fillMaxSize().hazeSource(haze, zIndex = 1f)) {
-                                Pages(
-                                    page = page,
-                                    still = ui.reduceAnimation,
-                                    queue = queue,
-                                    index = index,
-                                    query = query,
-                                    onQuery = { query = it },
-                                    searches = searches,
-                                    onSearch = { searches++ },
-                                    onOpen = { go(page.copy(opened = it)) },
-                                    onOpenAny = { go(page.copy(opened = it)) },
-                                    onShelf = { go(Page(Tab.LIBRARY, it)) },
-                                    onPlaylist = { go(Page(Tab.LIBRARY, Shelf.PLAYLISTS, PlaylistKey(it))) },
-                                    onBack = { back() },
-                                )
+                Column(Modifier.fillMaxSize()) {
+                    // 1. Genuine Windows Title Bar at the very top
+                    DesktopTitleBar(
+                        canGoBack = history.isNotEmpty(),
+                        onBack = back,
+                    )
+
+                    // 2. Middle Row: Sidebar + Main Pages Area + Right Panel
+                    Row(Modifier.weight(1f).fillMaxWidth()) {
+                        Sidebar(sideSelected, folded = folded) { key ->
+                            when (key) {
+                                is Tab -> go(Page(key))
+                                is Shelf -> go(Page(Tab.LIBRARY, key))
+                                is PlaylistKey -> go(Page(Tab.LIBRARY, Shelf.PLAYLISTS, key))
                             }
-                            TopBar(
-                                song, canGoBack = history.isNotEmpty(), onBack = back,
-                                panel = panel.takeIf { panelShown },
-                                onPanel = { p -> panel = if (panel == p && panelShown) null else p },
-                                onOpenPlayer = { playerOpen = true },
-                                modifier = Modifier.align(Alignment.TopCenter),
-                                panelRoom = roomForPanel,
-                            )
+                        }
+                        Box(Modifier.weight(1f).fillMaxHeight()) {
+                            CompositionLocalProvider(
+                                LocalPageTop provides 12.dp,
+                                LocalPageBottom provides if (song != null) 92.dp else 40.dp,
+                                com.opentune.ui.components.LocalHazeState provides haze.takeIf { !ui.reduceBlur },
+                            ) {
+                                Box(Modifier.fillMaxSize().hazeSource(haze, zIndex = 1f)) {
+                                    Pages(
+                                        page = page,
+                                        still = ui.reduceAnimation,
+                                        queue = queue,
+                                        index = index,
+                                        query = query,
+                                        onQuery = { query = it },
+                                        searches = searches,
+                                        onSearch = { searches++ },
+                                        onOpen = { go(page.copy(opened = it)) },
+                                        onOpenAny = { go(page.copy(opened = it)) },
+                                        onShelf = { go(Page(Tab.LIBRARY, it)) },
+                                        onPlaylist = { go(Page(Tab.LIBRARY, Shelf.PLAYLISTS, PlaylistKey(it))) },
+                                        onBack = { back() },
+                                    )
+                                }
+                            }
+                        }
+                        val shown = rememberLast(panel)
+                        AnimatedVisibility(
+                            visible = panelShown,
+                            enter = if (ui.reduceAnimation) fadeIn(tween(140)) else expandHorizontally(Motion.soft(), Alignment.Start) + fadeIn(tween(220, 80)),
+                            exit = if (ui.reduceAnimation) fadeOut(tween(120)) else shrinkHorizontally(tween(260), Alignment.Start) + fadeOut(tween(160)),
+                        ) {
+                            if (song != null && shown != null) RightPanel(shown, song, queue, index, onPanel = { panel = it }, onOpenArtist = { go(page.copy(opened = it)) })
                         }
                     }
-                    val shown = rememberLast(panel)
-                    AnimatedVisibility(
-                        visible = panelShown,
-                        enter = if (ui.reduceAnimation) fadeIn(tween(140)) else expandHorizontally(Motion.soft(), Alignment.Start) + fadeIn(tween(220, 80)),
-                        exit = if (ui.reduceAnimation) fadeOut(tween(120)) else shrinkHorizontally(tween(260), Alignment.Start) + fadeOut(tween(160)),
-                    ) {
-                        if (song != null && shown != null) RightPanel(shown, song, queue, index, onPanel = { panel = it }, onOpenArtist = { go(page.copy(opened = it)) })
-                    }
+
+                    // 3. Android-style bottom docked player bar
+                    BottomPlayerBar(
+                        song = song,
+                        panel = panel.takeIf { panelShown },
+                        onPanel = { p -> panel = if (panel == p && panelShown) null else p },
+                        onOpenPlayer = { playerOpen = true },
+                        panelRoom = roomForPanel,
+                    )
                 }
 
                 // The full player rises over everything.
