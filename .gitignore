@@ -45,3 +45,6 @@ website-reports/
 loopd_legacy_backup/
 node_modules/
 loopd_branding_assets/
+release_desktop/
+*.exe
+*.msi

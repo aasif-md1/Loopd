@@ -181,11 +181,14 @@ fun String?.artworkAt(px: Int): String? = this?.let { url ->
         ".mzstatic.com/" in url -> url.replace(APPLE_SIZE, "/${px.coerceAtMost(3000)}x${px.coerceAtMost(3000)}bb.jpg")
         ".dzcdn.net/" in url -> url.replace(DEEZER_SIZE, "/${px.coerceAtMost(1200)}x${px.coerceAtMost(1200)}-")
         "coverartarchive.org/" in url && !url.endsWith("-500") -> url.replace(CAA_SIZE, "/front-${if (px <= 250) 250 else if (px <= 500) 500 else 1200}")
-        else -> url.replace(SIZE_HINT, "w$px-h$px")
+        SIZE_HINT.containsMatchIn(url) -> url.replace(SIZE_HINT, "w$px-h$px")
+        S_HINT.containsMatchIn(url) -> url.replace(S_HINT, "=s$px")
+        else -> url
     }
 }
 
 private val SIZE_HINT = Regex("""w\d+-h\d+""")
+private val S_HINT = Regex("""=s\d+""")
 private val APPLE_SIZE = Regex("""/\d+x\d+[a-z]*\.(?:jpg|jpeg|png|webp)$""")
 private val DEEZER_SIZE = Regex("""/\d+x\d+-""")
 private val CAA_SIZE = Regex("""/front-\d+$""")
