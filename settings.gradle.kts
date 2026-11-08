@@ -19,4 +19,3 @@ rootProject.name = "Loopd"
 include(":app")
 include(":core")
 include(":wear")
-include(":desktop")

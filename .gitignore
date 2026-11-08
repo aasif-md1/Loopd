@@ -5,7 +5,6 @@
 .DS_Store
 /build
 /app/build
-/desktop/build
 /core/build
 /captures
 .externalNativeBuild
@@ -17,7 +16,6 @@ keystore.properties
 *.keystore
 /app/build
 /app/build
-/desktop/build
 /core/build
 .kotlin/
 
@@ -25,7 +23,6 @@ keystore.properties
 ios/OpenTune.xcodeproj/
 ios/build
 /app/build
-/desktop/build
 /core/build/
 ios/Payload/
 ios/*.ipa
@@ -55,5 +52,6 @@ loopd_legacy_backup/
 node_modules/
 loopd_branding_assets/
 release_desktop/
+build_dist/
 *.exe
 *.msi
