@@ -272,7 +272,7 @@ object UpdateCheck {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val notification = NotificationCompat.Builder(context, CHANNEL)
-            .setSmallIcon(com.opentune.core.R.drawable.ic_stat_opentune)
+            .setSmallIcon(AppHooks.getNotificationSmallIcon(context))
             .setContentTitle("Loopd ${release.version} is out")
             .setContentText("Tap to update from ${BuildConfig.VERSION_NAME}")
             .setContentIntent(open)

@@ -1,7 +1,9 @@
 package com.opentune.data
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import androidx.media3.common.Player
 
 /**
@@ -22,4 +24,34 @@ object AppHooks {
 
     /** Called when the player stops for good. */
     @Volatile var onPlayerStopped: (Context) -> Unit = { }
+
+    /** Returns the small icon resource ID for notifications matching the active app icon. */
+    @Volatile var getNotificationSmallIcon: (Context) -> Int = { resolveActiveNotificationIcon(it) }
+
+    /**
+     * Resolves the active notification icon drawable resource based on
+     * user settings or active launcher alias.
+     */
+    fun resolveActiveNotificationIcon(context: Context): Int {
+        val savedName = runCatching {
+            context.getSharedPreferences("settings", Context.MODE_PRIVATE).getString("selected_app_icon", null)
+        }.getOrNull()
+
+        val iconName = savedName ?: runCatching {
+            val pm = context.packageManager
+            listOf("LooPd", "PULSE", "FLOW", "AXIS", "TUNE", "ORBIT").firstOrNull { name ->
+                val comp = ComponentName(context, "${context.packageName}.icon.$name")
+                pm.getComponentEnabledSetting(comp) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            }
+        }.getOrNull()
+
+        return when (iconName?.uppercase()) {
+            "PULSE" -> com.opentune.core.R.drawable.ic_stat_pulse
+            "FLOW" -> com.opentune.core.R.drawable.ic_stat_flow
+            "AXIS" -> com.opentune.core.R.drawable.ic_stat_axis
+            "TUNE" -> com.opentune.core.R.drawable.ic_stat_tune
+            "ORBIT" -> com.opentune.core.R.drawable.ic_stat_orbit
+            else -> com.opentune.core.R.drawable.ic_stat_loopd
+        }
+    }
 }

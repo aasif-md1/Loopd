@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Loopd TUNE notification mark: pure white on transparent, as Android tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M 30,56 C 30,35 41,25 54,25 C 67,25 78,35 78,56 L 78,77 C 78,81 74,83 70,83 C 66,83 63,80 63,76 L 63,56 C 63,42 59,36 54,36 C 49,36 45,42 45,56 L 45,76 C 45,80 42,83 38,83 C 34,83 30,81 30,77 Z" />
+</vector>

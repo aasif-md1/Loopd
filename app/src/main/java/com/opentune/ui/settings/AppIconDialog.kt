@@ -40,20 +40,31 @@ internal enum class AppIcon(
     val title: String,
     val resource: Int,
     val foregroundRes: Int,
+    val statIconRes: Int,
     val isDark: Boolean,
 ) {
-    LooPd("LooPd", R.mipmap.ic_launcher, R.drawable.ic_foreground_loopd, isDark = true),
-    PULSE("PULSE", R.mipmap.ic_launcher_pulse, R.drawable.ic_foreground_pulse, isDark = false),
-    FLOW("FLOW", R.mipmap.ic_launcher_flow, R.drawable.ic_foreground_flow, isDark = false),
-    AXIS("AXIS", R.mipmap.ic_launcher_axis, R.drawable.ic_foreground_axis, isDark = true),
-    TUNE("TUNE", R.mipmap.ic_launcher_tune, R.drawable.ic_foreground_tune, isDark = false),
-    ORBIT("ORBIT", R.mipmap.ic_launcher_orbit, R.drawable.ic_foreground_orbit, isDark = true);
+    LooPd("LooPd", R.mipmap.ic_launcher, R.drawable.ic_foreground_loopd, com.opentune.core.R.drawable.ic_stat_loopd, isDark = true),
+    PULSE("PULSE", R.mipmap.ic_launcher_pulse, R.drawable.ic_foreground_pulse, com.opentune.core.R.drawable.ic_stat_pulse, isDark = false),
+    FLOW("FLOW", R.mipmap.ic_launcher_flow, R.drawable.ic_foreground_flow, com.opentune.core.R.drawable.ic_stat_flow, isDark = false),
+    AXIS("AXIS", R.mipmap.ic_launcher_axis, R.drawable.ic_foreground_axis, com.opentune.core.R.drawable.ic_stat_axis, isDark = true),
+    TUNE("TUNE", R.mipmap.ic_launcher_tune, R.drawable.ic_foreground_tune, com.opentune.core.R.drawable.ic_stat_tune, isDark = false),
+    ORBIT("ORBIT", R.mipmap.ic_launcher_orbit, R.drawable.ic_foreground_orbit, com.opentune.core.R.drawable.ic_stat_orbit, isDark = true);
 
     fun component(context: Context) = ComponentName(context, "${context.packageName}.icon.$name")
     companion object {
         var current: AppIcon = LooPd
 
         fun selected(context: Context): AppIcon {
+            val savedName = runCatching {
+                context.getSharedPreferences("settings", Context.MODE_PRIVATE).getString("selected_app_icon", null)
+            }.getOrNull()
+
+            val fromSaved = savedName?.let { name -> entries.firstOrNull { it.name.equals(name, ignoreCase = true) } }
+            if (fromSaved != null) {
+                current = fromSaved
+                return fromSaved
+            }
+
             val found = entries.firstOrNull {
                 context.packageManager.getComponentEnabledSetting(it.component(context)) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
             } ?: LooPd
@@ -71,6 +82,7 @@ internal fun selectAppIcon(context: Context, choice: AppIcon) {
         pm.setComponentEnabledSetting(it.component(context), PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
     }
     AppIcon.current = choice
+    context.getSharedPreferences("settings", Context.MODE_PRIVATE).edit().putString("selected_app_icon", choice.name).apply()
 }
 
 @Composable

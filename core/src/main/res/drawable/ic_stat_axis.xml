@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Loopd AXIS notification mark: pure white on transparent, as Android tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M 34,34 C 34,32 36,31 38,31 L 44,31 C 45.5,31 46,32 46,34 L 46,65 L 72,65 C 73.5,65 74,66 74,68 L 74,74 C 74,75.5 73.5,76 72,76 L 38,76 C 35,76 34,74.5 34,72 Z M 44.5,54 a 9.5,9.5 0 1,0 19,0 a 9.5,9.5 0 1,0 -19,0" />
+</vector>
