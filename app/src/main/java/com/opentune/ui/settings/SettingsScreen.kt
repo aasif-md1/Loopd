@@ -1426,7 +1426,7 @@ private fun settingsSections(
                     NavRow("Wrapped", onOpenWrapped, summary = "Your listening as an animated story", icon = Icons.Rounded.AutoAwesome)
                 },
                 Entry("Export data", "backup json") {
-                    NavRow("Export data", { exporter.launchSafely(context, "opentune-backup.json") }, summary = "Settings, history, likes and playlists, as one JSON file", icon = Icons.Rounded.Upload)
+                    NavRow("Export data", { exporter.launchSafely(context, "loopd-backup.json") }, summary = "Settings, history, likes and playlists, as one JSON file", icon = Icons.Rounded.Upload)
                 },
                 Entry("Import data", "restore json") {
                     NavRow("Import data", { importer.launchSafely(context, arrayOf("application/json")) }, summary = "Replaces the settings, history, likes and playlists on this device", icon = Icons.Rounded.Download)
@@ -1563,7 +1563,6 @@ private fun settingsSections(
                         icon = Icons.Rounded.Info,
                     )
                 },
-                Entry("Loopd Community", "github discord community addons developer") { CommunityBanner() },
                 Entry("Support Loopd", "donate upi pay money tip support developer") {
                     NavRow("Support Loopd", { supportDialog = true }, summary = "A small thank-you helps keep Loopd going", icon = Icons.Rounded.Favorite)
                 },

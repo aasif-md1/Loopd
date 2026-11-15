@@ -297,9 +297,6 @@ fun HomeScreen(
                 }
             }
             item(key = "festival") { FestivalCard() }
-            itemsIndexed(runtime.banners.filter { platform in it.platforms }, key = { _, banner -> "remote-banner:${banner.id}" }) { _, banner ->
-                RemoteBannerCard(banner)
-            }
             for (section in runtime.sections.filter { it.enabled }) when (section.id) {
                 "speed-dial" -> if (ui.speedDial && speedDial.size >= SPEED_DIAL_MIN) item(key = "speed-dial") {
                     SpeedDialSection(speedDial,

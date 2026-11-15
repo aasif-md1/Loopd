@@ -454,7 +454,7 @@ object ReplayCard {
     private fun withAlpha(color: Int, alpha: Int) = (color and 0x00FFFFFF) or (alpha shl 24)
 
     /** The picture's file name in the gallery: one per save, so an older one is never replaced. */
-    internal fun fileName(nowMs: Long): String = "OpenTune-Replay-" + SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date(nowMs)) + ".png"
+    internal fun fileName(nowMs: Long): String = "Loopd-Replay-" + SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date(nowMs)) + ".png"
 }
 
 /**
@@ -488,7 +488,7 @@ fun ReplayShareSheet(summary: ReplaySummary, period: String, onDismiss: () -> Un
             val saved = runCatching { ShareCard.saveImage(context, b, ReplayCard.fileName(System.currentTimeMillis())) }
                 .onFailure { Log.w("ReplayCard", "couldn't save the card", it) }.isSuccess
             saving = false
-            if (saved) com.opentune.data.Pills.done("Saved to Pictures/OpenTune", context) else com.opentune.data.Pills.error("Couldn't save the picture", context)
+            if (saved) com.opentune.data.Pills.done("Saved to Pictures/Loopd", context) else com.opentune.data.Pills.error("Couldn't save the picture", context)
         }
     }
     val storage = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -528,7 +528,7 @@ fun ReplayShareSheet(summary: ReplaySummary, period: String, onDismiss: () -> Un
                     val b = card ?: return@SheetButton
                     haptics.press()
                     scope.launch {
-                        ShareCard.sendImage(context, b, "OpenTune-Replay.png", "My ${content.title} on Loopd · ${content.period}", "Replay")
+                        ShareCard.sendImage(context, b, "Loopd-Replay.png", "My ${content.title} on Loopd · ${content.period}", "Replay")
                     }
                 },
             )

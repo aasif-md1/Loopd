@@ -71,7 +71,7 @@ object ShareCard {
                     draw(cover, song.title, song.artist, positionMs, duration, avatar = photo, subtitle = song.albumName, liked = liked)
                 }
             }.onFailure { Log.w(TAG, "couldn't make the share card", it) }.getOrNull()
-            sendImage(context, bitmap, "OpenTune-${song.videoId}.png", "${song.title} · ${song.artist}\n$link", song.title)
+            sendImage(context, bitmap, "Loopd-${song.videoId}.png", "${song.title} · ${song.artist}\n$link", song.title)
         }
     }
     /**
@@ -110,7 +110,7 @@ object ShareCard {
     val saveNeedsPermission get() = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
 
     /**
-     * Writes [bitmap] as a PNG to Pictures/OpenTune, where the gallery finds
+     * Writes [bitmap] as a PNG to Pictures/Loopd, where the gallery finds
      * it. From Android 10 this goes through MediaStore with no permission;
      * before that it needs WRITE_EXTERNAL_STORAGE, which the caller asks for.
      */
@@ -121,7 +121,7 @@ object ShareCard {
             put(MediaStore.Images.Media.MIME_TYPE, "image/png")
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            values.put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/OpenTune")
+            values.put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/Loopd")
             values.put(MediaStore.Images.Media.IS_PENDING, 1)
             val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
             val uri = resolver.insert(collection, values) ?: error("Couldn't add the picture")

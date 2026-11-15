@@ -28,7 +28,7 @@ data class AppConfig(
     val sources: List<RemoteSource>? = null,
     val github: String = "https://github.com/aasif-md1/Loopd", val discord: String = "https://discord.gg/6udrCVh5n",
     val web: String = "https://loopd.app/player/", val tv: String = "https://loopd.app/",
-    val timeoutMs: Long = 8000, val retries: Int = 2, val communityPrompts: Boolean = true,
+    val timeoutMs: Long = 8000, val retries: Int = 2, val communityPrompts: Boolean = false,
 ) {
     fun title(id: String, fallback: String) = sections.firstOrNull { it.id == id }?.title?.ifBlank { fallback } ?: fallback
 }
@@ -89,7 +89,7 @@ object RemoteConfigProtocol {
         val github = url(links.getString("github")); val discord = url(links.getString("discord"))
         require(com.opentune.data.addons.AddonProtocol.url(github).host == "github.com")
         require(com.opentune.data.addons.AddonProtocol.url(discord).host in setOf("discord.gg", "discord.com"))
-        return AppConfig(revision, expires, sections, banners, playlists, sources, github, discord, url(links.getString("web")), url(links.getString("tv")), timeout, retries, data.getBoolean("communityPrompts"))
+        return AppConfig(revision, expires, sections, banners, playlists, sources, github, discord, url(links.getString("web")), url(links.getString("tv")), timeout, retries, false)
     }
 }
 
@@ -106,7 +106,8 @@ object RemoteConfig {
     fun init(context: Context) {
         prefs = context.getSharedPreferences("remote_config", 0)
         val p = prefs!!
-        runCatching { RemoteConfigProtocol.verify(p.getString("envelope", "")!!, p.getString("key", "")!!, p.getLong("revision", 0)) }.getOrNull()?.let { mutable.value = it }
+        runCatching { p.edit().remove("envelope").apply() }
+        runCatching { RemoteConfigProtocol.verify(p.getString("envelope", "")!!, p.getString("key", "")!!, p.getLong("revision", 0)) }.getOrNull()?.let { mutable.value = it.copy(banners = emptyList(), communityPrompts = false) }
     }
     private fun get(path: String): String = client.newCall(Request.Builder().url(ORIGIN + path).build()).execute().use { response ->
         require(response.isSuccessful)
@@ -127,7 +128,7 @@ object RemoteConfig {
                 val envelope = get("/v1/app-config")
                 val config = RemoteConfigProtocol.verify(envelope, key, p.getLong("revision", 0))
                 p.edit().putString("key", key).putString("envelope", envelope).putLong("revision", config.revision).apply()
-                mutable.value = config; true
+                mutable.value = config.copy(banners = emptyList(), communityPrompts = false); true
             } catch (e: kotlinx.coroutines.CancellationException) { throw e }
             catch (_: Exception) { false }
         }
