@@ -36,8 +36,8 @@ import java.util.concurrent.TimeUnit
 
 /** Ways to back the project: a star on GitHub, or money over UPI. */
 object Support {
-    val REPO: String get() = com.opentune.data.config.RemoteConfig.current.github
-    const val UPI_ID = "whoosthis@axl"
+    const val REPO: String = "https://github.com/aasif-md1/Loopd"
+    const val UPI_ID = ""
     private const val PAYEE = "Loopd"
     private const val NOTE = "Support Loopd"
     /** Suggested amounts, in rupees. */
@@ -48,16 +48,22 @@ object Support {
      * payee and amount filled in. Built by hand: UPI apps want the "@" in
      * the address as it is, not percent-encoded.
      */
-    fun upiLink(rupees: Double): String =
-        "upi://pay?pa=$UPI_ID&pn=$PAYEE&am=${String.format(Locale.ROOT, "%.2f", rupees)}&cu=INR&tn=${NOTE.replace(" ", "%20")}"
+    fun upiLink(rupees: Double): String {
+        if (UPI_ID.isBlank()) return ""
+        return "upi://pay?pa=$UPI_ID&pn=$PAYEE&am=${String.format(Locale.ROOT, "%.2f", rupees)}&cu=INR&tn=${NOTE.replace(" ", "%20")}"
+    }
 
     /** Asks which UPI app to pay with, the amount already in. */
     fun pay(context: Context, rupees: Double) {
+        if (UPI_ID.isBlank()) {
+            com.opentune.data.Pills.done("Donations are currently disabled.", context)
+            return
+        }
         val view = Intent(Intent.ACTION_VIEW, upiLink(rupees).toUri())
         try {
             context.startActivity(Intent.createChooser(view, "Send with").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         } catch (e: android.content.ActivityNotFoundException) {
-            com.opentune.data.Pills.error("No UPI app on this phone. You can send it to $UPI_ID from another one.", context)
+            com.opentune.data.Pills.error("No UPI app on this phone.", context)
         }
     }
 
@@ -124,17 +130,19 @@ fun SupportDialog(onDismiss: () -> Unit) {
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
-                Text(
-                    "Goes to ${Support.UPI_ID}",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
+                if (Support.UPI_ID.isNotBlank()) {
+                    Text(
+                        "Goes to ${Support.UPI_ID}",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
             }
         },
         confirmButton = {
             SheetButton(
-                rupees?.let { "Send ₹${if (it % 1.0 == 0.0) it.toLong().toString() else String.format(Locale.ROOT, "%.2f", it)}" } ?: "Send",
-                enabled = rupees != null,
+                if (Support.UPI_ID.isBlank()) "Coming soon" else rupees?.let { "Send ₹${if (it % 1.0 == 0.0) it.toLong().toString() else String.format(Locale.ROOT, "%.2f", it)}" } ?: "Send",
+                enabled = rupees != null && Support.UPI_ID.isNotBlank(),
                 onClick = { rupees?.let { Support.pay(context, it) }; onDismiss() },
             )
         },

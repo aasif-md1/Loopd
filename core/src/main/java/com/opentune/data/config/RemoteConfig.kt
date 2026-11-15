@@ -89,7 +89,7 @@ object RemoteConfigProtocol {
         val github = url(links.getString("github")); val discord = url(links.getString("discord"))
         require(com.opentune.data.addons.AddonProtocol.url(github).host == "github.com")
         require(com.opentune.data.addons.AddonProtocol.url(discord).host in setOf("discord.gg", "discord.com"))
-        return AppConfig(revision, expires, sections, banners, playlists, sources, github, discord, url(links.getString("web")), url(links.getString("tv")), timeout, retries, false)
+        return AppConfig(revision, expires, sections, banners, playlists, sources, "https://github.com/aasif-md1/Loopd", discord, url(links.getString("web")), url(links.getString("tv")), timeout, retries, false)
     }
 }
 

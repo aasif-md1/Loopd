@@ -1568,7 +1568,7 @@ private fun settingsSections(
                 },
                 Entry("Star on GitHub", "star github rate like") {
                     NavRow("Star on GitHub", {
-                        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, com.opentune.ui.components.Support.REPO.toUri())) }
+                        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, "https://github.com/aasif-md1/Loopd".toUri())) }
                     }, summary = "Helps other people find Loopd", icon = Icons.Rounded.Star)
                 },
                 Entry("Source code", "github open source license gpl") {
