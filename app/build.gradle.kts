@@ -13,9 +13,9 @@ android {
     defaultConfig {
         applicationId = "com.loopd.music"
         minSdk = 26
-        targetSdk = 36
-        versionCode = 5
-        versionName = "1.0.4"
+        targetSdk = 35
+        versionCode = 6
+        versionName = "1.0.5"
         // This version's store changelog, shown as What's new when a release
         // goes out before the app's own notes for it are written.
         val changelog = rootProject.file("fastlane/metadata/android/en-US/changelogs/$versionCode.txt")
@@ -30,12 +30,20 @@ android {
     // install. See .github/workflows/release.yml.
     val releaseKeystore = System.getenv("OPENTUNE_KEYSTORE")?.let(::file)?.takeIf { it.exists() }
     signingConfigs {
+        getByName("debug") {
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+        }
         if (releaseKeystore != null) {
             create("release") {
                 storeFile = releaseKeystore
                 storePassword = System.getenv("OPENTUNE_KEYSTORE_PASSWORD")
                 keyAlias = System.getenv("OPENTUNE_KEY_ALIAS")
                 keyPassword = System.getenv("OPENTUNE_KEY_PASSWORD")
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
             }
         }
     }

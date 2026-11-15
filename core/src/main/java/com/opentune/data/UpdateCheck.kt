@@ -155,7 +155,7 @@ object UpdateCheck {
     internal fun fromPage(finalUrl: String, abis: List<String>): Release? {
         val version = TAG_IN_URL.find(finalUrl.substringBefore('?'))?.groupValues?.get(1) ?: return null
         val abi = abis.firstOrNull { it in BUILT_FOR } ?: "universal"
-        val name = "OpenTune-v$version-$abi.apk"
+        val name = "Loopd-v$version-$abi.apk"
         return Release(
             version = version,
             page = "$RELEASES_PAGE/tag/v$version",
@@ -297,8 +297,10 @@ object UpdateCheck {
             )
         }
         val apks = assets.filter { it.name.endsWith(".apk") }
-        val apk = abis.firstNotNullOfOrNull { abi -> apks.firstOrNull { it.name.endsWith("-$abi.apk") } }
-            ?: apks.firstOrNull { it.name.endsWith("-universal.apk") }
+        val apk = abis.firstNotNullOfOrNull { abi ->
+            apks.firstOrNull { it.name.contains(abi, ignoreCase = true) }
+        } ?: apks.firstOrNull { it.name.contains("universal", ignoreCase = true) }
+          ?: apks.firstOrNull()
         return Release(
             version = tag,
             page = obj.str("html_url") ?: RELEASES_PAGE,
