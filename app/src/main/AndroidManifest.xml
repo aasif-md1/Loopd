@@ -53,7 +53,7 @@
 
     <application
         android:banner="@drawable/tv_banner"
-        android:name=".OpenTuneApp"
+        android:name=".LoopdApp"
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup_rules"
         android:dataExtractionRules="@xml/data_extraction_rules"

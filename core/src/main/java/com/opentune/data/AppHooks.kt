@@ -28,6 +28,9 @@ object AppHooks {
     /** Returns the small icon resource ID for notifications matching the active app icon. */
     @Volatile var getNotificationSmallIcon: (Context) -> Int = { resolveActiveNotificationIcon(it) }
 
+    /** Called when the user changes the app icon, to update active notifications immediately. */
+    @Volatile var onNotificationIconChanged: (() -> Unit)? = null
+
     /**
      * Resolves the active notification icon drawable resource based on
      * user settings or active launcher alias.

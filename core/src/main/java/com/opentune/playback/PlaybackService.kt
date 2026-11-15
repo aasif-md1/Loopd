@@ -139,6 +139,37 @@ class PlaybackService : MediaLibraryService() {
         super.onCreate()
         val context: Context = this
 
+        val defaultNotificationProvider = androidx.media3.session.DefaultMediaNotificationProvider(this)
+        setMediaNotificationProvider(object : androidx.media3.session.MediaNotification.Provider {
+            override fun createNotification(
+                mediaSession: MediaSession,
+                customLayout: ImmutableList<CommandButton>,
+                actionFactory: androidx.media3.session.MediaNotification.ActionFactory,
+                onNotificationChangedCallback: androidx.media3.session.MediaNotification.Provider.Callback,
+            ): androidx.media3.session.MediaNotification {
+                val iconRes = com.opentune.data.AppHooks.getNotificationSmallIcon(this@PlaybackService)
+                defaultNotificationProvider.setSmallIcon(iconRes)
+                return defaultNotificationProvider.createNotification(
+                    mediaSession, customLayout, actionFactory, onNotificationChangedCallback
+                )
+            }
+
+            override fun handleCustomCommand(
+                session: MediaSession,
+                action: String,
+                extras: Bundle,
+            ): Boolean = defaultNotificationProvider.handleCustomCommand(session, action, extras)
+
+            override fun getNotificationChannelInfo(): androidx.media3.session.MediaNotification.Provider.NotificationChannelInfo =
+                defaultNotificationProvider.notificationChannelInfo
+        })
+
+        com.opentune.data.AppHooks.onNotificationIconChanged = {
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                runCatching { triggerNotificationUpdate() }
+            }
+        }
+
         val songSources = SongSources(context)
         val cached = songSources.cached
         val direct = songSources.direct
@@ -604,6 +635,7 @@ class PlaybackService : MediaLibraryService() {
     }
 
     override fun onDestroy() {
+        com.opentune.data.AppHooks.onNotificationIconChanged = null
         ExternalStreams.playing(null, null)
         (mediaSession?.player as? ExoPlayer)?.takeIf { it.mediaItemCount > 0 }?.let { p ->
             QueueStore.save(QueueStore.Saved((0 until p.mediaItemCount).map { SongRef.of(p.getMediaItemAt(it).toSong()) }, p.currentMediaItemIndex, p.currentPosition))

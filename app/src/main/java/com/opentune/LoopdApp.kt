@@ -14,7 +14,7 @@ import com.opentune.data.subsonic.Subsonic
 import com.opentune.ui.ScreenCache
 import okio.Path.Companion.toOkioPath
 
-class OpenTuneApp : Application(), SingletonImageLoader.Factory {
+class LoopdApp : Application(), SingletonImageLoader.Factory {
     /**
      * Artwork on the app's shared HTTP client (warm connections to Google's
      * image hosts), a fifth of memory for decoded images and 100 MB on disk,
@@ -59,3 +59,4 @@ class OpenTuneApp : Application(), SingletonImageLoader.Factory {
         com.opentune.data.Welcome.settle(this)
     }
 }
+

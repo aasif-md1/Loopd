@@ -83,6 +83,7 @@ internal fun selectAppIcon(context: Context, choice: AppIcon) {
     }
     AppIcon.current = choice
     context.getSharedPreferences("settings", Context.MODE_PRIVATE).edit().putString("selected_app_icon", choice.name).apply()
+    com.opentune.data.AppHooks.onNotificationIconChanged?.invoke()
 }
 
 @Composable
